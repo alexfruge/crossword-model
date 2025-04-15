@@ -5,9 +5,10 @@ paper/*.toc
 paper/*.synctex.gz
 paper/*.bcf
 paper/*.run.xml
-paper/Figures
 paper/sample.bib
 
 **/__pycache__/
 
 trained_models
+
+logs/*.log

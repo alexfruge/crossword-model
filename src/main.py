@@ -6,6 +6,7 @@ from transformers import GPT2Tokenizer, AutoTokenizer
 from data_management.dataset_creation import split_and_save_data, CrosswordDataset
 from model.load import load_model, load_finetuned_model
 from model.train import train
+from utils import log_statement
 
 def generate_answer(
     model: torch.nn.Module, 
@@ -57,6 +58,7 @@ def generate_answer(
 def generate_answers_from_csv(
     model: torch.nn.Module, 
     tokenizer: GPT2Tokenizer, 
+    model_name: str,
     csv_path: str = "data/test.csv", 
     n: int = 10, 
     device: str = 'cpu'
@@ -74,7 +76,7 @@ def generate_answers_from_csv(
         For each clue, prints the clue, the correct answer, and the generated answer.
     """
     
-    print(f"[Batch] Loading {n} clues from {csv_path}...\n")
+    log_statement(model_name, f"[Batch] Loading {n} clues from {csv_path}...\n")
     df = pd.read_csv(csv_path)
     clues = df['clue'].tolist()[:n]
     correct_answers = df['answer'].tolist()[:n]
@@ -82,9 +84,9 @@ def generate_answers_from_csv(
 
     for i, (clue, correct, expected_len) in enumerate(zip(clues, correct_answers, ans_lengths), 1):
         generated = generate_answer(model, tokenizer, clue, device=device)
-        print(f"{i}. Clue: {clue} {expected_len}")
-        print(f"Correct Answer:   {correct}")
-        print(f"Generated Answer: {generated}\n")
+        log_statement(model_name, f"{i}. Clue: {clue} ({expected_len})")
+        log_statement(model_name, f"Correct Answer:   {correct}")
+        log_statement(model_name, f"Generated Answer: {generated}\n")
 
 
 def main(model_name: str = "gpt2-medium"):
@@ -113,42 +115,42 @@ def main(model_name: str = "gpt2-medium"):
     - The script uses GPU if available; otherwise, it defaults to CPU.
     """
 
-    # print("[Main] Starting crossword fine-tuning script...")
+    log_statement(model_name, "[Main] Starting crossword fine-tuning script...")
 
-    # # Load data
-    split_and_save_data(file="data/nytcrosswords.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.5, max_elements=100_000)
+    # Load data
+    split_and_save_data(file="data/nytcrosswords.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.5, max_elements=10, model_name=model_name)
     train_df = pd.read_csv("data/train.csv")
     clues = train_df['clue'].tolist()
     answers = train_df['answer'].tolist()
     ans_lengths = train_df['ans_length'].tolist()
 
-    # # Load tokenizer and model
-    print("[Main] Loading tokenizer...")
+    # Load tokenizer and model
+    log_statement(model_name, "[Main] Loading tokenizer...")
     if "gpt2" in model_name.lower():
         tokenizer = GPT2Tokenizer.from_pretrained(model_name.split("/")[-1])
     else:
         tokenizer = AutoTokenizer.from_pretrained(model_name)
     tokenizer.pad_token = tokenizer.eos_token
-    print("[Main] Tokenizer loaded.")
+    log_statement(model_name, "[Main] Tokenizer loaded.")
 
     model = load_model(model_name=model_name)
 
     # Prepare dataset and dataloader
-    dataset = CrosswordDataset(clues, answers, ans_lengths, tokenizer)
+    dataset = CrosswordDataset(clues, answers, ans_lengths, tokenizer, model_name=model_name)
     dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
     # Start training
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"[Main] Using device: {device}")
-    train(model, dataloader, device)
+    log_statement(model_name, f"[Main] Using device: {device}")
+    loss = train(model, model_name, dataloader, device)
 
-    print("[Main] Training complete.")
+    log_statement(model_name, "[Main] Training complete.")
 
 
     save_path = f"trained_models/model-{model_name.split("/")[-1]}.pt"
-    print(f"[Main] Saving model weights to {save_path}...")
+    log_statement(model_name, f"[Main] Saving model weights to {save_path}...")
     torch.save(model.state_dict(), save_path)
-    print("[Main] Model weights saved successfully.")
+    log_statement(model_name, "[Main] Model weights saved successfully.")
 
     # Initialize
     # model = load_finetuned_model(model_name=model_name, weights_path=f"trained_models/model-{model_name}.pt")
@@ -156,18 +158,19 @@ def main(model_name: str = "gpt2-medium"):
     # model.to(device)
 
     # Generate answers
-    generate_answers_from_csv(model, tokenizer, csv_path="data/test.csv", n=100, device=device)
+    generate_answers_from_csv(model, tokenizer, model_name, csv_path="data/test.csv", n=100, device=device)
 
 if __name__ == "__main__":
     models = [
-        # "gpt2-medium", 
-        # "gpt2-large", 
-        # "gpt2-xl",
+        "gpt2-medium", 
+        "gpt2-large", 
+        "gpt2-xl",
         "EleutherAI/pythia-14m",
+        "EleutherAI/pythia-31m",
     ]
     for model_name in models:
-        print(f"[Main] Running with model: {model_name}")
+        log_statement(model_name, f"[Main] Running with model: {model_name}")
         main(model_name=model_name)
-        print(f"[Main] Finished with model: {model_name}\n")
+        log_statement(model_name, f"[Main] Finished with model: {model_name}\n")
 
 

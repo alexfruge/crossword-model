@@ -1,30 +1,34 @@
 import torch
 import time
 
-def train(model, dataloader, device, num_epochs=3, lr=5e-5):
+from utils import log_statement
+
+def train(model, model_name, dataloader, device, num_epochs=3, lr=5e-5):
     """
     Trains a given model using the provided dataloader and optimizer settings.
     Args:
         model (torch.nn.Module): The model to be trained.
+        model_name (str): The name of the model, used for logging.
         dataloader (torch.utils.data.DataLoader): DataLoader providing the training data.        
         device (torch.device): The device (CPU or GPU) to perform training on.
         num_epochs (int, optional): Number of epochs to train the model. Defaults to 3.
         lr (float, optional): Learning rate for the AdamW optimizer. Defaults to 5e-5.
     Returns:
-        None
+        list: A list of batch loss values recorded every 10 batches.
     Notes:
         - The function uses CrossEntropyLoss for calculating the loss.
         - The training progress, including batch loss and epoch duration, is printed to the console.
         - The model is moved to the specified device before training begins.
     """
 
-    print("[Training] Starting training loop...")
+    log_statement(model_name, "[Training] Starting training loop...")
     model.train()
     model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
+    batch_losses = []
 
     for epoch in range(num_epochs):
-        print(f"\n[Epoch {epoch + 1}/{num_epochs}] Starting...")
+        log_statement(model_name, f"\n[Epoch {epoch + 1}/{num_epochs}] Starting...")
         total_loss = 0
         start_time = time.time()
 
@@ -45,8 +49,11 @@ def train(model, dataloader, device, num_epochs=3, lr=5e-5):
             total_loss += loss.item()
 
             if (batch_idx + 1) % 10 == 0 or (batch_idx + 1) == len(dataloader):
-                print(f"[Epoch {epoch + 1}] Batch {batch_idx + 1}/{len(dataloader)} - Loss: {loss.item():.4f}")
+                log_statement(model_name, f"[Epoch {epoch + 1}] Batch {batch_idx + 1}/{len(dataloader)} - Loss: {loss.item():.4f}")
+                batch_losses.append(loss.item())
 
         avg_loss = total_loss / len(dataloader)
         duration = time.time() - start_time
-        print(f"[Epoch {epoch + 1}] Completed in {duration:.2f}s - Avg Loss: {avg_loss:.4f}")
+        log_statement(model_name, f"[Epoch {epoch + 1}] Completed in {duration:.2f}s - Avg Loss: {avg_loss:.4f}")
+
+    return batch_losses

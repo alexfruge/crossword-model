@@ -1,5 +1,6 @@
 import torch
 from transformer_lens import HookedTransformer
+from utils import log_statement
 
 def load_model(model_name: str) -> HookedTransformer:
     """
@@ -14,13 +15,13 @@ def load_model(model_name: str) -> HookedTransformer:
         model = load_model("gpt-3")
     """
 
-    print(f"[Model] Loading model: {model_name}...")
+    log_statement(model_name, f"[Model] Loading model: {model_name}...")
     try:
         model = HookedTransformer.from_pretrained(model_name)
     except Exception as e:
-        print(f"[Model] Error loading model: {e}")
+        log_statement(model_name, f"[Model] Error loading model: {e}")
         raise e
-    print("[Model] Model loaded successfully.")
+    log_statement(model_name, "[Model] Model loaded successfully.")
     return model
 
 
@@ -38,10 +39,10 @@ def load_finetuned_model(model_name: str = "gpt2-xl", weights_path: str = "model
         - The model is set to evaluation mode after loading the weights.
     """
     
-    print(f"[Load] Loading base model: {model_name}")
+    log_statement(model_name, f"[Load] Loading base model: {model_name}")
     model = HookedTransformer.from_pretrained(model_name)
-    print(f"[Load] Loading fine-tuned weights from: {weights_path}")
+    log_statement(model_name, f"[Load] Loading fine-tuned weights from: {weights_path}")
     model.load_state_dict(torch.load(weights_path, map_location='cpu'))
     model.eval()
-    print("[Load] Model loaded and set to eval mode.")
+    log_statement(model_name, "[Load] Model loaded and set to eval mode.")
     return model
