@@ -1,17 +1,17 @@
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
-from transformers import GPT2Tokenizer
-import re
+from transformers import GPT2Tokenizer, AutoTokenizer
 
-from data_management.dataset_creation import CrosswordDataset, split_and_save_data
+from data_management.dataset_creation import split_and_save_data, CrosswordDataset
 from model.load import load_model, load_finetuned_model
 from model.train import train
 
 def generate_answer(
     model: torch.nn.Module, 
     tokenizer: GPT2Tokenizer, 
-    clue: str, 
+    clue: str,
+    expected_length: int = None, 
     max_new_tokens: int = 20, 
     device: str = 'cpu'
 ) -> str:
@@ -21,19 +21,18 @@ def generate_answer(
         model (torch.nn.Module): The pre-trained language model used for generating text.
         tokenizer (transformers.PreTrainedTokenizer): The tokenizer associated with the model.
         clue (str): The crossword clue to solve, which may include an expected answer length (e.g., "(4)").
+        expected_length (int, optional): The expected length of the crossword answer. 
+                        If provided, the generated answer will be truncated to this length, and non-alphabetic characters 
+                        will be removed. Defaults to None.
         max_new_tokens (int, optional): The maximum number of tokens to generate. Defaults to 20.
         device (str, optional): The device to run the model on ('cpu' or 'cuda'). Defaults to 'cpu'.
     Returns:
         str: The generated answer in uppercase. If the clue specifies an expected length, the answer is truncated
              to that length and non-alphabetic characters are removed.
     """
-    
-    # Parse clue for expected answer length (e.g. "(4)")
-    match = re.search(r'\((\d+)\)', clue)
-    expected_length = int(match.group(1)) if match else None
 
     # Construct prompt
-    prompt = f"Task: Solve the crossword clue:\nCrossword clue: {clue}\nAnswer:"
+    prompt = f"Task: Solve the crossword clue:\nCrossword clue: {clue} ({expected_length})\nAnswer:"
     input_ids = tokenizer.encode(prompt, return_tensors='pt').to(device)
     generated = input_ids.clone()
 
@@ -51,11 +50,6 @@ def generate_answer(
     # Decode full sequence and extract answer
     decoded = tokenizer.decode(generated[0], skip_special_tokens=True)
     answer_raw = decoded.split("Answer:")[-1].strip()
-
-    # if expected_length:
-    #     # Remove non-letters and truncate to expected length
-    #     answer_clean = re.sub(r"[^A-Za-z]", "", answer_raw)
-    #     return answer_clean[:expected_length].upper()
 
     return answer_raw.upper()
 
@@ -84,10 +78,11 @@ def generate_answers_from_csv(
     df = pd.read_csv(csv_path)
     clues = df['clue'].tolist()[:n]
     correct_answers = df['answer'].tolist()[:n]
+    ans_lengths = df['ans_length'].tolist()[:n]
 
-    for i, (clue, correct) in enumerate(zip(clues, correct_answers), 1):
+    for i, (clue, correct, expected_len) in enumerate(zip(clues, correct_answers, ans_lengths), 1):
         generated = generate_answer(model, tokenizer, clue, device=device)
-        print(f"{i}. Clue: {clue}")
+        print(f"{i}. Clue: {clue} {expected_len}")
         print(f"Correct Answer:   {correct}")
         print(f"Generated Answer: {generated}\n")
 
@@ -118,48 +113,58 @@ def main(model_name: str = "gpt2-medium"):
     - The script uses GPU if available; otherwise, it defaults to CPU.
     """
 
-    print("[Main] Starting crossword fine-tuning script...")
+    # print("[Main] Starting crossword fine-tuning script...")
 
-    # Load data
-    split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.5)
+    # # Load data
+    split_and_save_data(file="data/nytcrosswords.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.5, max_elements=100_000)
     train_df = pd.read_csv("data/train.csv")
     clues = train_df['clue'].tolist()
     answers = train_df['answer'].tolist()
+    ans_lengths = train_df['ans_length'].tolist()
 
-    # Load tokenizer and model
+    # # Load tokenizer and model
     print("[Main] Loading tokenizer...")
-    tokenizer = GPT2Tokenizer.from_pretrained(model_name)
+    if "gpt2" in model_name.lower():
+        tokenizer = GPT2Tokenizer.from_pretrained(model_name.split("/")[-1])
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
     tokenizer.pad_token = tokenizer.eos_token
     print("[Main] Tokenizer loaded.")
 
     model = load_model(model_name=model_name)
 
     # Prepare dataset and dataloader
-    dataset = CrosswordDataset(clues, answers, tokenizer)
+    dataset = CrosswordDataset(clues, answers, ans_lengths, tokenizer)
     dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
 
     # Start training
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[Main] Using device: {device}")
-    train(model, dataloader, tokenizer, device)
+    train(model, dataloader, device)
 
-    # print("[Main] Training complete.")
+    print("[Main] Training complete.")
 
-    save_path = f"trained_models/model-{model_name}.pt"
+
+    save_path = f"trained_models/model-{model_name.split("/")[-1]}.pt"
     print(f"[Main] Saving model weights to {save_path}...")
     torch.save(model.state_dict(), save_path)
     print("[Main] Model weights saved successfully.")
 
     # Initialize
     # model = load_finetuned_model(model_name=model_name, weights_path=f"trained_models/model-{model_name}.pt")
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # model.to(device)
 
     # Generate answers
     generate_answers_from_csv(model, tokenizer, csv_path="data/test.csv", n=100, device=device)
 
 if __name__ == "__main__":
-    models = ["gpt2-medium", "gpt2-large", "gpt2-xl"]
+    models = [
+        # "gpt2-medium", 
+        # "gpt2-large", 
+        # "gpt2-xl",
+        "EleutherAI/pythia-14m",
+    ]
     for model_name in models:
         print(f"[Main] Running with model: {model_name}")
         main(model_name=model_name)

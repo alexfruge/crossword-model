@@ -14,9 +14,9 @@ class CrosswordDataset(Dataset):
         tokenizer (transformers.PreTrainedTokenizer): Tokenizer for encoding the samples.
         max_length (int): Maximum length for tokenization and padding.
     """
-    def __init__(self, clues, answers, tokenizer, max_length=50):
+    def __init__(self, clues, answers, ans_lengths, tokenizer, max_length=50):
         print("[Dataset] Initializing crossword dataset...")
-        self.samples = [f"Task: Solve the crossword clue:\nCrossword clue: {clue}\nAnswer: {answer}" for clue, answer in zip(clues, answers)]
+        self.samples = [f"Task: Solve the crossword clue:\nCrossword clue: {clue} ({ans_length})\nAnswer: {answer}" for clue, answer, ans_length in zip(clues, answers, ans_lengths)]
         self.tokenizer = tokenizer
         self.max_length = max_length
         print(f"[Dataset] Created {len(self.samples)} samples.")
@@ -67,7 +67,7 @@ def load_data(file="data/ho.csv", max_elements = 1_000_000):
 
     return df
 
-def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.8):
+def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.8, max_elements = 10_000):
     """
     Split the dataset into training and testing datasets and save them to CSV files.
 
@@ -78,7 +78,7 @@ def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_fi
         test_size (float): Proportion of the dataset to include in the test split.
     """
     print("[Data] Splitting dataset into training and testing sets...")
-    df = load_data(file)
+    df = load_data(file, max_elements=max_elements)
     train_df, test_df = train_test_split(df, test_size=test_size, random_state=42)
 
     print(f"[Data] Saving training dataset to {train_file}...")
@@ -100,7 +100,6 @@ def add_answer_lengths(df):
     Returns:
         pd.DataFrame: DataFrame with the new 'ans_length' column.
     """
-    print(df.head())
 
     if 'ans_length' not in df.columns:
         print("[Data] Adding 'ans_length' column to the dataframe...")

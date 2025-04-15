@@ -6,8 +6,7 @@ def train(model, dataloader, device, num_epochs=3, lr=5e-5):
     Trains a given model using the provided dataloader and optimizer settings.
     Args:
         model (torch.nn.Module): The model to be trained.
-        dataloader (torch.utils.data.DataLoader): DataLoader providing the training data.
-        
+        dataloader (torch.utils.data.DataLoader): DataLoader providing the training data.        
         device (torch.device): The device (CPU or GPU) to perform training on.
         num_epochs (int, optional): Number of epochs to train the model. Defaults to 3.
         lr (float, optional): Learning rate for the AdamW optimizer. Defaults to 5e-5.
