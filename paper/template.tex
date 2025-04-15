@@ -29,7 +29,7 @@
 
 \addbibresource{sample.bib} % BibLaTeX bibliography file
 
-\runninghead{CrossLLM} % A shortened article title to appear in the running head, leave this command empty for no running head
+\runninghead{CrosswordLLM} % A shortened article title to appear in the running head, leave this command empty for no running head
 
 \footertext{} % Text to appear in the footer, leave this command empty for no footer text
 
@@ -39,7 +39,7 @@
 %	TITLE SECTION
 %----------------------------------------------------------------------------------------
 
-\title{CrossLLM: A Benchmark Framework for Evaluating Large Language Models on Cryptic Linguistic Reasoning in Crossword Puzzles} % Article title, use manual lines breaks (\\) to beautify the layout
+\title{CrosswordLLM: A Benchmark Framework for Evaluating Large Language Models on Cryptic Linguistic Reasoning in Crossword Puzzles} % Article title, use manual lines breaks (\\) to beautify the layout
 
 % Authors are listed in a comma-separated list with superscript numbers indicating affiliations
 % \thanks{} is used for any text that should be placed in a footnote on the first page, such as the corresponding author's email, journal acceptance dates, a copyright/license notice, keywords, etc
@@ -51,7 +51,7 @@
 % Full-width abstract
 \renewcommand{\maketitlehookd}{%
 	\begin{abstract}
-		\noindent Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent porttitor arcu luctus, imperdiet urna iaculis, mattis eros. Pellentesque iaculis odio vel nisl ullamcorper, nec faucibus ipsum molestie. Sed dictum nisl non aliquet porttitor. Etiam vulputate arcu dignissim, finibus sem et, viverra nisl. Aenean luctus congue massa, ut laoreet metus ornare in. Nunc fermentum nisi imperdiet lectus tincidunt vestibulum at ac elit. Nulla mattis nisl eu malesuada suscipit. Aliquam arcu turpis, ultrices sed luctus ac, vehicula id metus. Morbi eu feugiat velit, et tempus augue. Proin ac mattis tortor. Donec tincidunt, ante rhoncus luctus semper, arcu lorem lobortis justo, nec convallis ante quam quis lectus. Aenean tincidunt sodales massa, et hendrerit tellus mattis ac. Sed non pretium nibh. Donec cursus maximus luctus. Vivamus lobortis eros et massa porta porttitor.
+		\noindent I'll fill this out later once I get some results, and finalize any fine-tuning steps I plan on making (embeddings, prompt engineering, etc).
 	\end{abstract}
 }
 
@@ -73,13 +73,34 @@ understanding and generation. However, their ability to solve complex linguistic
 
 %------------------------------------------------
 
-\section{Data Acquisition and Cleanup}
+\section{Data Overview}
 
-\subsection{Data Sourcing}
+\subsection{Sourcing \& Explanation}
 
-The data for this project was pulled from two different sources. The first source is Darin Hawley's New York Times Crossword Clues \& Answers 1993-2021 dataset\footnote{\href{https://www.kaggle.com/datasets/darinhawley/new-york-times-crossword-clues-answers-19932021/data}{NYT Crossword Clues Dataset}}. This dataset contains 781,573 entries, each of which come with the date the puzzle containing the clue was published, the clue itself, and the answer. The NYT dataset is being used as our training data, as it contains a good spread of clue variety, including some pop-culture related clues, some wordplay, and a wide variety of difficulty in the clues themselves.
+The data for this project was pulled from two different sources. The first source is Darin Hawley's New York Times Crossword Clues \& Answers 1993-2021 dataset. \autocite{Hawley_2021} This dataset contains 781,573 entries, each of which come with the date the puzzle containing the clue was published, the clue itself, and the answer. 
 
-The second source of clues comes from George Ho's Cryptic Crossword Clues dataset \footnote{\href{https://cryptics.georgeho.org/}{George Ho's Cryptic Crossword Clues}}, which has a focus on clues that are difficult to solve, whether it be because of clever wordplay within the clues.
+The NYT dataset is being used as our training data, as it contains a good spread of clue variety, including some pop-culture related clues, some wordplay, and a wide variety of difficulty in the clues themselves. It also contains a good number of clues involving multiple words in a clue being concatenated into one continuous word (see Table \ref{tab:NYTClues} for some examples of this). I'll also use the NYT dataset for a testing suite that tests the selected models on more conventional clues.
+
+\begin{table} % Single column table
+	\centering
+	\begin{tabular}{c c c}
+		\toprule
+		Date & Answer & Clue \\
+		\midrule
+		11/8/2013 & EATAT & Irritate\\
+		7/8/2012 & ALQAEDA & War on terror target\\
+		7/7/2012 & ASGOODASGOLD & 100\% reliable\\
+		\bottomrule
+	\end{tabular}
+	\caption{Example clues from NYT Crossword Clues.}
+	\label{tab:NYTClues}
+\end{table}
+
+The second source of clues comes from George Ho's Cryptic Crossword Clues dataset \footnote{\href{https://cryptics.georgeho.org/}{George Ho's Cryptic Crossword Clues}}. Cryptic crosswords are crossword puzzles that are more popular in the United Kingdom, and they are known to be highly difficult to solve. There are many ways to construct a cryptic crossword clue, such as using anagrams, hidden words, homophones, or a combination of wordplay techniques. \autocite{Maynes-Aminzade_Henriq_2019} 
+
+An example of these two elements coming together would be for the clue "Record is set in Washington", with the corresponding clue "DISC", considered as "IS" inside of "DC", which can be ascertained from the clue (record is another word for disc, and "IS" being literally "set" within Washington ("DC" for short)).
+
+The goal with the cryptic clues dataset is to create a test for the trained models to see how well they can handle wordplay and 
 
 \begin{enumerate}
 	\item Donec dolor arcu, rutrum id molestie in, viverra sed diam
