@@ -92,7 +92,7 @@ def generate_answers_from_csv(
         print(f"Generated Answer: {generated}\n")
 
 
-def main():
+def main(model_name: str = "gpt2-medium"):
     """
     Main function to fine-tune a crossword-solving model and generate answers.
     This script performs the following steps:
@@ -127,7 +127,6 @@ def main():
     answers = train_df['answer'].tolist()
 
     # Load tokenizer and model
-    model_name = "gpt2-xl"
     print("[Main] Loading tokenizer...")
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     tokenizer.pad_token = tokenizer.eos_token
@@ -142,7 +141,7 @@ def main():
     # Start training
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[Main] Using device: {device}")
-    # train(model, dataloader, tokenizer, device)
+    train(model, dataloader, tokenizer, device)
 
     # print("[Main] Training complete.")
 
@@ -152,7 +151,7 @@ def main():
     print("[Main] Model weights saved successfully.")
 
     # Initialize
-    model = load_finetuned_model(model_name=model_name, weights_path=f"trained_models/model-{model_name}.pt")
+    # model = load_finetuned_model(model_name=model_name, weights_path=f"trained_models/model-{model_name}.pt")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
@@ -160,6 +159,10 @@ def main():
     generate_answers_from_csv(model, tokenizer, csv_path="data/test.csv", n=100, device=device)
 
 if __name__ == "__main__":
-    main()
+    models = ["gpt2-medium", "gpt2-large", "gpt2-xl"]
+    for model_name in models:
+        print(f"[Main] Running with model: {model_name}")
+        main(model_name=model_name)
+        print(f"[Main] Finished with model: {model_name}\n")
 
 

@@ -9,3 +9,5 @@ paper/Figures
 paper/sample.bib
 
 **/__pycache__/
+
+trained_models

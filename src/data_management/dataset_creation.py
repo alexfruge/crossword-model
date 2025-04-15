@@ -1,9 +1,5 @@
 import pandas as pd
-import torch
-from torch.utils.data import DataLoader, Dataset
-from transformer_lens import HookedTransformer
-from transformers import GPT2Tokenizer
-import time
+from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
 
 class CrosswordDataset(Dataset):
@@ -62,7 +58,7 @@ def load_data(file="data/ho.csv"):
     print(f"[Data] Loaded {len(ho_df)} rows.")
     return ho_df
 
-def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.5):
+def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.8):
     """
     Split the dataset into training and testing datasets and save them to CSV files.
 
