@@ -8,7 +8,13 @@ from data_management.dataset_creation import CrosswordDataset, split_and_save_da
 from model.load import load_model, load_finetuned_model
 from model.train import train
 
-def generate_answer(model, tokenizer, clue, max_new_tokens=20, device='cpu'):
+def generate_answer(
+    model: torch.nn.Module, 
+    tokenizer: GPT2Tokenizer, 
+    clue: str, 
+    max_new_tokens: int = 20, 
+    device: str = 'cpu'
+) -> str:
     """
     Generates an answer to a crossword clue using a language model.
     Args:
@@ -46,20 +52,26 @@ def generate_answer(model, tokenizer, clue, max_new_tokens=20, device='cpu'):
     decoded = tokenizer.decode(generated[0], skip_special_tokens=True)
     answer_raw = decoded.split("Answer:")[-1].strip()
 
-    if expected_length:
-        # Remove non-letters and truncate to expected length
-        answer_clean = re.sub(r"[^A-Za-z]", "", answer_raw)
-        return answer_clean[:expected_length].upper()
+    # if expected_length:
+    #     # Remove non-letters and truncate to expected length
+    #     answer_clean = re.sub(r"[^A-Za-z]", "", answer_raw)
+    #     return answer_clean[:expected_length].upper()
 
     return answer_raw.upper()
 
 
-def generate_answers_from_csv(model, tokenizer, csv_path="data/test.csv", n=10, device='cpu'):
+def generate_answers_from_csv(
+    model: torch.nn.Module, 
+    tokenizer: GPT2Tokenizer, 
+    csv_path: str = "data/test.csv", 
+    n: int = 10, 
+    device: str = 'cpu'
+) -> None:
     """
     Generates answers for a set of clues from a CSV file using a given model and tokenizer.
     Args:
-        model: The model used to generate answers.
-        tokenizer: The tokenizer used to preprocess the clues for the model.
+        model (torch.nn.Module): The model used to generate answers.
+        tokenizer (GPT2Tokenizer): The tokenizer used to preprocess the clues for the model.
         csv_path (str, optional): Path to the CSV file containing clues and correct answers. 
                                   Defaults to "data/test.csv".
         n (int, optional): Number of clues to process from the CSV file. Defaults to 10.
@@ -80,8 +92,32 @@ def generate_answers_from_csv(model, tokenizer, csv_path="data/test.csv", n=10, 
         print(f"Generated Answer: {generated}\n")
 
 
+def main():
+    """
+    Main function to fine-tune a crossword-solving model and generate answers.
+    This script performs the following steps:
+    1. Loads and splits the dataset into training and testing sets.
+    2. Loads a pre-trained GPT-2 tokenizer and model.
+    3. Prepares the dataset and dataloader for training.
+    4. Trains the model on the crossword dataset.
+    5. Saves the fine-tuned model weights.
+    6. Loads the fine-tuned model and generates answers for a test dataset.
+    Steps:
+    - Data is loaded from a CSV file and split into training and testing sets.
+    - The GPT-2 tokenizer is initialized and configured.
+    - A custom dataset and dataloader are created for training.
+    - The model is trained using the training data.
+    - The trained model weights are saved to a file.
+    - The fine-tuned model is loaded and used to generate answers for clues in the test dataset.
+    Dependencies:
+    - PyTorch for model training and saving.
+    - Transformers library for GPT-2 tokenizer and model.
+    - Custom modules for data processing, model loading, and answer generation.
+    Note:
+    - Ensure that the required CSV files and directories exist before running the script.
+    - The script uses GPU if available; otherwise, it defaults to CPU.
+    """
 
-if __name__ == "__main__":
     print("[Main] Starting crossword fine-tuning script...")
 
     # Load data
@@ -91,7 +127,7 @@ if __name__ == "__main__":
     answers = train_df['answer'].tolist()
 
     # Load tokenizer and model
-    model_name = "gpt2-medium"
+    model_name = "gpt2-xl"
     print("[Main] Loading tokenizer...")
     tokenizer = GPT2Tokenizer.from_pretrained(model_name)
     tokenizer.pad_token = tokenizer.eos_token
@@ -106,21 +142,24 @@ if __name__ == "__main__":
     # Start training
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"[Main] Using device: {device}")
-    train(model, dataloader, tokenizer, device)
+    # train(model, dataloader, tokenizer, device)
 
-    print("[Main] Training complete.")
+    # print("[Main] Training complete.")
 
-    save_path = f"model-{model_name}.pt"
+    save_path = f"trained_models/model-{model_name}.pt"
     print(f"[Main] Saving model weights to {save_path}...")
     torch.save(model.state_dict(), save_path)
     print("[Main] Model weights saved successfully.")
 
     # Initialize
-    model = load_finetuned_model(model_name=model_name)
+    model = load_finetuned_model(model_name=model_name, weights_path=f"trained_models/model-{model_name}.pt")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
 
     # Generate answers
     generate_answers_from_csv(model, tokenizer, csv_path="data/test.csv", n=100, device=device)
+
+if __name__ == "__main__":
+    main()
 
 

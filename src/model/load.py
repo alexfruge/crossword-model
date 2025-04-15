@@ -1,7 +1,7 @@
 import torch
 from transformer_lens import HookedTransformer
 
-def load_model(model_name):
+def load_model(model_name: str) -> HookedTransformer:
     """
     Loads a pre-trained model using the specified model name.
     Args:
@@ -24,7 +24,7 @@ def load_model(model_name):
     return model
 
 
-def load_finetuned_model(model_name="gpt2-xl", weights_path="model-gpt2-xl.pt"):
+def load_finetuned_model(model_name: str = "gpt2-xl", weights_path: str = "model-gpt2-xl.pt") -> HookedTransformer:
     """
     Loads a fine-tuned transformer model.
     Args:
