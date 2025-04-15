@@ -37,7 +37,7 @@ class CrosswordDataset(Dataset):
         labels = input_ids.clone()
         return input_ids, attention_mask, labels
 
-def load_data(file="data/ho.csv"):
+def load_data(file="data/ho.csv", max_elements = 10000):
     """
     Load the crossword dataset from a CSV file.
 
@@ -50,13 +50,22 @@ def load_data(file="data/ho.csv"):
     """
     print("[Data] Loading crossword dataset from CSV...")
     try:
-        ho_df = pd.read_csv(file)
+        df = pd.read_csv(file)
     except FileNotFoundError:
         raise FileNotFoundError(f"[Error] File {file} not found.")
     
-    ho_df = ho_df.drop(columns=["rowid", "definition", "clue_number", "puzzle_date", "puzzle_name", "source_url"])
-    print(f"[Data] Loaded {len(ho_df)} rows.")
-    return ho_df
+    df = df[["clue", "answer"]]
+    print(f"[Data] Loaded {len(df)} rows.")
+    
+    if len(df) > max_elements:
+        print(f"[Data] Truncating dataset to {max_elements} rows.")
+        df = df.head(max_elements)
+    
+    df = add_answer_lengths(df)
+
+    df.to_csv(file, index=False)
+
+    return df
 
 def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.8):
     """
@@ -77,3 +86,32 @@ def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_fi
     print(f"[Data] Saving testing dataset to {test_file}...")
     test_df.to_csv(test_file, index=False)
     print("[Data] Dataset split and saved successfully.")
+
+
+
+def add_answer_lengths(df):
+    """
+    Add a column 'ans_length' to the dataframe containing the length of each answer.
+    The length is dash-delimited for multi-word answers.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing a column 'answer'.
+
+    Returns:
+        pd.DataFrame: DataFrame with the new 'ans_length' column.
+    """
+    if 'ans_length' not in df.columns:
+        print("[Data] Adding 'ans_length' column to the dataframe...")
+        df["ans_length"] = pd.Series(dtype="string")
+
+    # Remove answer length information from clues
+    df['clue'] = df['clue'].str.replace(r"\(\d+(,\d+)*\)", "", regex=True).str.strip()
+
+    def calculate_length(answer):
+        words = answer.split()
+        if len(words) > 1:
+            return ",".join(str(len(word)) for word in words)
+        return str(len(answer))
+    
+    df['ans_length'] = df['answer'].apply(calculate_length)
+    return df
