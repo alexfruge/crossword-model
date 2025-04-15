@@ -1,0 +1,11 @@
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.toc
+paper/*.synctex.gz
+paper/*.bcf
+paper/*.run.xml
+paper/Figures
+paper/sample.bib
+
+**/__pycache__/
