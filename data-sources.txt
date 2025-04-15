@@ -1,0 +1,2 @@
+NYT Crossword Clues: https://www.kaggle.com/datasets/darinhawley/new-york-times-crossword-clues-answers-19932021/data
+George Ho Cryptics: https://github.com/eigenfoo/cryptics
