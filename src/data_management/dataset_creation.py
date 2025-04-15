@@ -37,7 +37,7 @@ class CrosswordDataset(Dataset):
         labels = input_ids.clone()
         return input_ids, attention_mask, labels
 
-def load_data(file="data/ho.csv", max_elements = 10000):
+def load_data(file="data/ho.csv", max_elements = 1_000_000):
     """
     Load the crossword dataset from a CSV file.
 
@@ -54,7 +54,7 @@ def load_data(file="data/ho.csv", max_elements = 10000):
     except FileNotFoundError:
         raise FileNotFoundError(f"[Error] File {file} not found.")
     
-    df = df[["clue", "answer"]]
+    df = df[["clue", "answer"]].dropna()
     print(f"[Data] Loaded {len(df)} rows.")
     
     if len(df) > max_elements:
@@ -78,8 +78,8 @@ def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_fi
         test_size (float): Proportion of the dataset to include in the test split.
     """
     print("[Data] Splitting dataset into training and testing sets...")
-    ho_df = load_data(file)
-    train_df, test_df = train_test_split(ho_df, test_size=test_size, random_state=42)
+    df = load_data(file)
+    train_df, test_df = train_test_split(df, test_size=test_size, random_state=42)
 
     print(f"[Data] Saving training dataset to {train_file}...")
     train_df.to_csv(train_file, index=False)
@@ -100,6 +100,8 @@ def add_answer_lengths(df):
     Returns:
         pd.DataFrame: DataFrame with the new 'ans_length' column.
     """
+    print(df.head())
+
     if 'ans_length' not in df.columns:
         print("[Data] Adding 'ans_length' column to the dataframe...")
         df["ans_length"] = pd.Series(dtype="string")
