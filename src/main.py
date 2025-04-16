@@ -118,7 +118,7 @@ def main(model_name: str = "gpt2-medium"):
     log_statement(model_name, "[Main] Starting crossword fine-tuning script...")
 
     # Load data
-    split_and_save_data(file="data/nytcrosswords.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.5, max_elements=10, model_name=model_name)
+    split_and_save_data(file="data/nytcrosswords_full.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.5, max_elements=12_800, model_name=model_name)
     train_df = pd.read_csv("data/train.csv")
     clues = train_df['clue'].tolist()
     answers = train_df['answer'].tolist()
@@ -137,12 +137,12 @@ def main(model_name: str = "gpt2-medium"):
 
     # Prepare dataset and dataloader
     dataset = CrosswordDataset(clues, answers, ans_lengths, tokenizer, model_name=model_name)
-    dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
 
     # Start training
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     log_statement(model_name, f"[Main] Using device: {device}")
-    loss = train(model, model_name, dataloader, device)
+    loss = train(model, model_name, dataloader, device, num_epochs=5)
 
     log_statement(model_name, "[Main] Training complete.")
 
@@ -162,11 +162,13 @@ def main(model_name: str = "gpt2-medium"):
 
 if __name__ == "__main__":
     models = [
-        "gpt2-medium", 
-        "gpt2-large", 
-        "gpt2-xl",
         "EleutherAI/pythia-14m",
         "EleutherAI/pythia-31m",
+        "EleutherAI/pythia-70m",
+        "EleutherAI/pythia-160m",
+        "EleutherAI/pythia-410m",
+        "EleutherAI/pythia-1.3b",
+        # "EleutherAI/pythia-2.8b",
     ]
     for model_name in models:
         log_statement(model_name, f"[Main] Running with model: {model_name}")

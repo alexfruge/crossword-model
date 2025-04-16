@@ -54,9 +54,12 @@ def load_data(file="data/ho.csv", max_elements = 1_000_000, model_name=None):
     """
     log_statement(model_name, "[Data] Loading crossword dataset from CSV...")
     try:
-        df = pd.read_csv(file)
+        df = pd.read_csv(file, encoding="utf-8", on_bad_lines="skip")
     except FileNotFoundError:
         raise FileNotFoundError(f"[Error] File {file} not found.")
+    except UnicodeDecodeError:
+        log_statement(model_name, "[Error] UnicodeDecodeError: Trying with ISO-8859-1 encoding...")
+        df = pd.read_csv(file, encoding="ISO-8859-1", on_bad_lines="skip")
     
     df = df[["clue", "answer"]].dropna()
     log_statement(model_name, f"[Data] Loaded {len(df)} rows.")
@@ -67,7 +70,7 @@ def load_data(file="data/ho.csv", max_elements = 1_000_000, model_name=None):
     
     df = add_answer_lengths(df, model_name=model_name)
 
-    df.to_csv(file, index=False)
+    df.to_csv(file.replace("_full", ""), index=False)
 
     return df
 

@@ -12,5 +12,5 @@ def log_statement(model_name: str, statement: str):
     log_file_path = os.path.join(logs_dir, f"{model_name.split("/")[-1]}.log")
     
     # Append the statement to the log file
-    with open(log_file_path, "a") as log_file:
+    with open(log_file_path, "a", encoding="utf-8") as log_file:
         log_file.write(statement + "\n")
