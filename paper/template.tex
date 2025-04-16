@@ -100,7 +100,7 @@ The second source of clues comes from George Ho's Cryptic Crossword Clues datase
 
 An example of these two elements coming together would be for the clue "Record is set in Washington", with the corresponding clue "DISC", considered as "IS" inside of "DC", which can be ascertained from the clue (record is another word for disc, and "IS" being literally "set" within Washington ("DC" for short)).
 
-The goal with the cryptic clues dataset is to create a test for the trained models to see how well they can handle wordplay and 
+The goal with the cryptic clues dataset is to create a test for the trained models to see how well they can handle wordplay and deeper reasoning with language. I'd be pleasantly surprised to see the models handle these clues well, as it takes humans a long time to process these answers as well.
 
 \begin{enumerate}
 	\item Donec dolor arcu, rutrum id molestie in, viverra sed diam
@@ -131,23 +131,24 @@ Mauris interdum porttitor fringilla. Proin tincidunt sodales leo at ornare. Done
 \section{Results}
 
 \begin{table} % Single column table
-	\caption{Example single column table.}
 	\centering
 	\begin{tabular}{l l r}
 		\toprule
-		\multicolumn{2}{c}{Location} \\
-		\cmidrule(r){1-2}
-		East Distance & West Distance & Count \\
+		Model & Training Time (s) & Loss (Epoch 5) \\
 		\midrule
-		100km & 200km & 422 \\
-		350km & 1000km & 1833 \\
-		600km & 1200km & 890 \\
+		pythia-14m & 444.85 & YYY \\
+		pythia-31m & XXX & YYY \\
+		pythia-70m & XXX & YYY \\
+		pythia-160m & XXX & YYY \\
+		pythia-410m & XXX & YYY \\
+		pythia-1.3b & XXX & YYY \\
 		\bottomrule
 	\end{tabular}
-	\label{tab:distcounts}
+	\label{tab:pythiarun1}
+	\caption{First run across Pythia Suite using NYT Data (n=12,800, batch size=32, epochs=5)}
 \end{table}
 
-Referencing a table using its label: Table \ref{tab:distcounts}.
+Referencing a table using its label: Table \ref{tab:pythiarun1}.
 
 \begin{table*} % Full width table (notice the starred environment)
 	\caption{Example two column table with fixed-width columns.}
