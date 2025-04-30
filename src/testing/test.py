@@ -15,7 +15,7 @@ models_dir = "trained_models"
 test_data_path = "data/test.csv"
 
 # Load test data
-def load_test_data(file_path, max_elements=10_000):
+def load_test_data(file_path, max_elements=1_000):
     """
     Load test data from a CSV file and return specific columns.
     Args:
@@ -126,19 +126,18 @@ def test_models():
     model_files = [f for f in os.listdir(models_dir) if f.endswith('.pt')]
 
     for model_file in model_files:
-        if "14m" in model_file:
-            model_name = model_file.replace("model-", "").replace(".pt", "").replace("trained_models/", "")
-            if "pythia" in model_name:
-                model_name = f"EleutherAI/{model_name}"
-            model_path = os.path.join(models_dir, model_file)
-            model = load.load_finetuned_model(model_name=model_name, weights_path=model_path)
+        model_name = model_file.replace("model-", "").replace(".pt", "").replace("trained_models/", "")
+        if "pythia" in model_name:
+            model_name = f"EleutherAI/{model_name}"
+        model_path = os.path.join(models_dir, model_file)
+        model = load.load_finetuned_model(model_name=model_name, weights_path=model_path)
 
-            predictions = evaluate_model(model, inputs, model_name)
-            accuracy, length_match_accuracy = calculate_metrics(predictions, true_outputs)
+        predictions = evaluate_model(model, inputs, model_name)
+        accuracy, length_match_accuracy = calculate_metrics(predictions, true_outputs)
 
-            print(f"Accuracy: {accuracy:.4f}")
-            print(f"Character Length Match Accuracy: {length_match_accuracy:.4f}")
-            print("-" * 50)
+        print(f"Accuracy: {accuracy:.4f}")
+        print(f"Character Length Match Accuracy: {length_match_accuracy:.4f}")
+        print("-" * 50)
 
 if __name__ == "__main__":
     test_models()
