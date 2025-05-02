@@ -20,6 +20,7 @@
 %	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
 %----------------------------------------------------------------------------------------
 
+
 \documentclass[
 	a4paper, % Paper size, use either a4paper or letterpaper
 	10pt, % Default font size, can also use 11pt or 12pt, although this is not recommended
@@ -28,6 +29,9 @@
 ]{LTJournalArticle}
 
 \addbibresource{sample.bib} % BibLaTeX bibliography file
+
+\usepackage{amsmath}  % For \mathbf, \text, and math operators
+\usepackage{amssymb}  % For \odot
 
 \runninghead{CrosswordLLM} % A shortened article title to appear in the running head, leave this command empty for no running head
 
@@ -39,7 +43,7 @@
 %	TITLE SECTION
 %----------------------------------------------------------------------------------------
 
-\title{CrosswordLLM: A Benchmark Framework for Evaluating Large Language Models on Cryptic Linguistic Reasoning in Crossword Puzzles} % Article title, use manual lines breaks (\\) to beautify the layout
+\title{CrosswordLLM: A Benchmark Framework for Evaluating Large Language Models on Linguistic Reasoning in Crossword Puzzles} % Article title, use manual lines breaks (\\) to beautify the layout
 
 % Authors are listed in a comma-separated list with superscript numbers indicating affiliations
 % \thanks{} is used for any text that should be placed in a footnote on the first page, such as the corresponding author's email, journal acceptance dates, a copyright/license notice, keywords, etc
@@ -68,80 +72,145 @@
 \section{Introduction}
 
 Large Language Models (LLMs) have demonstrated remarkable proficiency in natural language
-understanding and generation. However, their ability to solve complex linguistic tasks, such as crosswords, remains an open area of investigation. This project aims to design an evaluation pipeline to test how well different LLMs can solve crosswords. By analyzing performance variations across model sizes and architectures, I seek to understand whether larger models inherently perform better, or if architectural differences contribute more significantly to success. Additionally, I will explore how contextual information, prompt engineering, and multimodal inputs may affect model performance. This research will not only offer insights into the cognitive capabilities of LLMs but also contribute to broader AI evaluations in natural language processing (NLP).
-
+understanding and generation. However, their ability to solve complex linguistic tasks, such as crosswords, remains an open area of investigation. This project aims to design an evaluation pipeline to test how well different LLMs can solve crossword clues. By analyzing performance variations across model sizes and architectures, I seek to understand whether larger models inherently perform better, or if architectural differences contribute more significantly to success. Additionally, I will explore how contextual information, prompt engineering, and explicit length requirements for answers may affect model performance. This research will not only offer insights into the cognitive capabilities of LLMs but also contribute to broader AI evaluations in natural language processing (NLP).
 
 %------------------------------------------------
 
-\section{Data Overview}
+\section{Literature Review}
 
-\subsection{Sourcing \& Explanation}
+\subsection{Foundational Work}
 
-The data for this project was pulled from two different sources. The first source is Darin Hawley's New York Times Crossword Clues \& Answers 1993-2021 dataset. \autocite{Hawley_2021} This dataset contains 781,573 entries, each of which come with the date the puzzle containing the clue was published, the clue itself, and the answer. 
+The sources within the Foundational Work section mainly go discuss how LLMs scale better with more compute, which was one of the attributes I wanted to verify in my crossword case.
+
+\begin{itemize}
+	\item Brown et al. (2020) introduced GPT-3, demonstrating that large-scale LLMs can perform a variety of tasks with minimal examples, a technique known as few-shot learning. This work established the potential of LLMs to generalize across tasks without extensive fine-tuning.
+	\item Chowdhery et al. (2022) presented PaLM, a 540-billion-parameter model trained using the Pathways system. PaLM achieved state-of-the-art results on numerous benchmarks, highlighting the benefits of scaling model size and training data for improved performance.
+\end{itemize}
+\subsection{Enhancing Few-Shot Learning and Prompting Techniques}
+
+This section highlights methods for improving language model performance with limited data through better prompt design and reasoning strategies. 
+
+\begin{itemize}
+	\item Gao et al. (2020) proposed LM-BFF, a method combining prompt-based fine-tuning with automated prompt generation to improve few-shot learning in smaller models. This approach is particularly relevant for scenarios with limited annotated data, such as specialized crossword clues.
+	\item Wei et al. (2022) introduced Chain-of-Thought (CoT) prompting, where models generate intermediate reasoning steps before arriving at an answer. CoT prompting significantly improved performance on complex reasoning tasks, suggesting its applicability to the nuanced reasoning required in crossword solving. I ended up using Chain of Thought prompting as one of my enhancements to the existing models.
+	\item Zhou et al. (2023) developed Automatic Prompt Engineer (APE), a system that automatically generates and selects effective prompts. APE outperformed human-crafted prompts on various tasks, indicating the potential for automated prompt optimization in crossword applications.
+\end{itemize}
+
+
+\subsection{Previous Applications to Crossword Solving}
+
+\noindent Saha et al. (2024) demonstrated that current LLMs exhibit significant competence in solving cryptic crossword clues, outperforming previous state-of-the-art results by a factor of 2–3. They developed a search algorithm enabling LLMs to solve full crossword grids, achieving 93\% accuracy on New York Times puzzles. This work underscores the feasibility of applying LLMs to complex language tasks like crosswords
+
+\subsection{Emerging Techniques and Considerations}
+
+\noindent Pattern-Aware Chain-of-Thought Prompting (Zhang et al., 2024) emphasizes the importance of diverse reasoning patterns in prompts to enhance model generalization and robustness. This approach could further improve LLM performance on varied crossword clue types.
+
+\subsection{Future Direction}
+
+Integrating these advancements suggests a multifaceted approach to developing an LLM-based crossword-solving suite:
+\begin{itemize}
+	\item Model Selection: Utilize large-scale models like PaLM for their superior reasoning capabilities.
+	
+	\item Few-Shot Learning: Implement LM-BFF techniques to fine-tune models with limited crossword-specific data.
+	
+	
+	\item Reasoning Enhancement: Apply CoT and pattern-aware prompting to improve the model's ability to handle complex clues.
+\end{itemize}
+
+
+
+By building upon these foundational and contemporary works, the proposed suite aims to advance the capability of LLMs in solving crossword puzzles with high accuracy and efficiency.
+
+%------------------------------------------------
+
+
+
+\section{Methodology}
+
+\subsection{Data Sourcing \& Explanation}
+
+The data for this project was pulled from Darin Hawley's New York Times Crossword Clues \& Answers 1993-2021 dataset. (Hawley, 2021) This dataset contains 781,573 entries, each of which come with the date the puzzle containing the clue was published, the clue itself, and the answer. 
 
 The NYT dataset is being used as our training data, as it contains a good spread of clue variety, including some pop-culture related clues, some wordplay, and a wide variety of difficulty in the clues themselves. It also contains a good number of clues involving multiple words in a clue being concatenated into one continuous word (see Table \ref{tab:NYTClues} for some examples of this). I'll also use the NYT dataset for a testing suite that tests the selected models on more conventional clues.
 
-\begin{table} % Single column table
+\begin{table}[h] % Single column table
 	\centering
-	\begin{tabular}{c c c}
+	\begin{tabular}{c c}
 		\toprule
-		Date & Answer & Clue \\
+		Answer & Clue \\
 		\midrule
-		11/8/2013 & EATAT & Irritate\\
-		7/8/2012 & ALQAEDA & War on terror target\\
-		7/7/2012 & ASGOODASGOLD & 100\% reliable\\
+		EATAT & Irritate\\
+		ALQAEDA & War on terror target\\
+		ASGOODASGOLD & 100\% reliable\\
 		\bottomrule
 	\end{tabular}
 	\caption{Example clues from NYT Crossword Clues.}
 	\label{tab:NYTClues}
 \end{table}
 
-The second source of clues comes from George Ho's Cryptic Crossword Clues dataset \footnote{\href{https://cryptics.georgeho.org/}{George Ho's Cryptic Crossword Clues}}. Cryptic crosswords are crossword puzzles that are more popular in the United Kingdom, and they are known to be highly difficult to solve. There are many ways to construct a cryptic crossword clue, such as using anagrams, hidden words, homophones, or a combination of wordplay techniques. \autocite{Maynes-Aminzade_Henriq_2019} 
+\subsection{Libraries and Tools Used}
 
-An example of these two elements coming together would be for the clue "Record is set in Washington", with the corresponding clue "DISC", considered as "IS" inside of "DC", which can be ascertained from the clue (record is another word for disc, and "IS" being literally "set" within Washington ("DC" for short)).
+The core libraries used within this package are \textbf{PyTorch 2.0} (training original models), \textbf{TransformerLens} (loading original models), \textbf{HuggingFace Transformers} (loading tokenizers), as well as \textbf{Pandas} and \textbf{Scikit-learn}.
 
-The goal with the cryptic clues dataset is to create a test for the trained models to see how well they can handle wordplay and deeper reasoning with language. I'd be pleasantly surprised to see the models handle these clues well, as it takes humans a long time to process these answers as well.
+\noindent The system leverages the \textbf{Pythia} suite of autoregressive language models (Biderman et al., 2023) as its primary base architecture due to their transparency, reproducibility, and controlled scaling properties. Pythia models provide a standardized framework for experimentation, with versions ranging from 70M to 12B parameters, allowing systematic comparisons across model sizes. For the sake of the models being usable on my computer, the largest model I tested with contained 1.3 billion parameters.
 
-\begin{enumerate}
-	\item Donec dolor arcu, rutrum id molestie in, viverra sed diam
-	\item Curabitur feugiat
-	\item Turpis sed auctor facilisis
-\end{enumerate}
+\subsection{Training Process}
 
-Mauris interdum porttitor fringilla. Proin tincidunt sodales leo at ornare. Donec tempus magna non mauris gravida luctus. Cras vitae arcu vitae mauris eleifend scelerisque. Nam sem sapien, vulputate nec felis eu, blandit convallis risus. Pellentesque sollicitudin venenatis tincidunt. In et ipsum libero. Nullam tempor ligula a massa convallis pellentesque.
+The training process follows a structured pipeline designed to optimize the model’s ability to generate accurate crossword answers while incorporating task-specific enhancements. Below is a high-level overview of the training workflow.
 
-This is a numbered list:
+The system ingests a structured dataset of (clue, answer, length) tuples, derived from the NYT Crossword Clue Dataset. The clues are then standardized (removing metadata like enumeration), and answers are normalized to uppercase alphabetic strings. Answer lengths are explicitly annotated, either as single integers (for single-word answers) or comma-separated values (for multi-word answers). Data is partitioned into training (80\%) and evaluation (20\%) sets, ensuring no overlap.
 
+Clues are formatted into instructional prompts (e.g., "Solve the crossword clue: [CLUE] ([LENGTH]). Answer:") to guide the model’s generation. Multiple prompting strategies (basic, detailed, chain-of-thought) are explored to improve task alignment. Inputs are tokenized using the base model’s pretrained tokenizer, with padding/truncation to a fixed sequence length.
 
+Once all of the data is brought in and cleaned up, the user specifies which model they want to use as a base, as well as which enhancement they want to add to that base via a CLI (e.g. main.py --model EleutherAI/pythia-70m --enhancement length\_aware would train the pythia-70m model with the length aware enhancement added on).
 
-\subsection{Species Identification}
+The model is trained via causal language modeling, where it predicts the answer tokens autoregressively. The loss is computed only on answer tokens (excluding the prompt). Depending on which enhancements the user specifies, there could be intervention here by said enhancements.
 
-Proin lobortis efficitur dictum. Pellentesque vitae pharetra eros, quis dignissim magna. Sed tellus leo, semper non vestibulum vel, tincidunt eu mi. Aenean pretium ut velit sed facilisis. Ut placerat urna facilisis dolor suscipit vehicula. Ut ut auctor nunc. Nulla non massa eros. Proin rhoncus arcu odio, eu lobortis metus sollicitudin eu. Duis maximus ex dui, id bibendum diam dignissim id. Aliquam quis lorem lorem. Phasellus sagittis aliquet dolor, vulputate cursus dolor convallis vel. Suspendisse eu tellus feugiat, bibendum lectus quis, fermentum nunc. Nunc euismod condimentum magna nec bibendum. Curabitur elementum nibh eu sem cursus, eu aliquam leo rutrum. Sed bibendum augue sit amet pharetra ullamcorper. Aenean congue sit amet tortor vitae feugiat.
+The training loop itself uses  the AdamW optimizer with a learning rate of $5E-05$, batch size of 32, and gradient clipping, as well as dropout (where applicable) and early stopping to prevent overfitting.
 
-Mauris interdum porttitor fringilla. Proin tincidunt sodales leo at ornare. Donec tempus magna non mauris gravida luctus. Cras vitae arcu vitae mauris eleifend scelerisque. Nam sem sapien, vulputate nec felis eu, blandit convallis risus. Pellentesque sollicitudin venenatis tincidunt. In et ipsum libero. Nullam tempor ligula a massa convallis pellentesque.
+\subsection{Enhancements}
 
-\subsection{Data Analysis}
+The base autoregressive language model is augmented with several task-specific enhancements designed to improve its crossword-solving capabilities. These modifications target key challenges in clue-answer generation, including length conditioning, semantic grounding, and controlled decoding.
 
-Vestibulum sodales orci a nisi interdum tristique. In dictum vehicula dui, eget bibendum purus elementum eu. Pellentesque lobortis mattis mauris, non feugiat dolor vulputate a. Cras porttitor dapibus lacus at pulvinar. Praesent eu nunc et libero porttitor malesuada tempus quis massa. Aenean cursus ipsum a velit ultricies sagittis. Sed non leo ullamcorper, suscipit massa ut, pulvinar erat. Aliquam erat volutpat. Nulla non lacus vitae mi placerat tincidunt et ac diam. Aliquam tincidunt augue sem, ut vestibulum est volutpat eget. Suspendisse potenti. Integer condimentum, risus nec maximus elementum, lacus purus porta arcu, at ultrices diam nisl eget urna. Curabitur sollicitudin diam quis sollicitudin varius. Ut porta erat ornare laoreet euismod. In tincidunt purus dui, nec egestas dui convallis non. In vestibulum ipsum in dictum scelerisque.
+\subsubsection{Length-Aware Modeling}
+One current problem with standard LLMs is that they struggle to generate answers of exact lengths (e.g., 5 letters for "Capital of France").
 
-Mauris interdum porttitor fringilla. Proin tincidunt sodales leo at ornare. Donec tempus magna non mauris gravida luctus. Cras vitae arcu vitae mauris eleifend scelerisque. Nam sem sapien, vulputate nec felis eu, blandit convallis risus. Pellentesque sollicitudin venenatis tincidunt. In et ipsum libero. Nullam tempor ligula a massa convallis pellentesque. Mauris interdum porttitor fringilla. Proin tincidunt sodales leo at ornare. Donec tempus magna non mauris gravida luctus. Cras vitae arcu vitae mauris eleifend scelerisque. Nam sem sapien, vulputate nec felis eu, blandit convallis risus. Pellentesque sollicitudin venenatis tincidunt. In et ipsum libero. Nullam tempor ligula a massa convallis pellentesque.
+One solution to this problem is to add explicit length conditioning via \textbf{length embeddings} and \textbf{positional bias}.
+
+Length embeddings are learned embedding layers which map target lengths (integers) to vectors, which are then added to the LM’s hidden states before the output layer, which are then used to select length-specific output heads (one per possible length).
+
+Positional bias is another position embedding which encourages the model to stop early when the target length is reached (via EOS token bias), and to avoid over-generation (suppression of non-alphabetic tokens beyond the target length).
+
+\subsubsection{Contextual Embedding Fusion}
+LMs may lack deep semantic understanding of clues (e.g., parsing wordplay like "Composer of 'The Planets' (5)" → "HOLST").
+
+The solution that I came up with is a hybrid architecture combining a \textbf{frozen sentence embedder} and \textbf{gated fusion}.
+
+The frozen sentence embedder is derived from a pretrained model (e.g., all-MiniLM-L6-v2) encodes clues into dense vectors, capturing synonym relationships ("composer" → "musician") and entity linkages ("The Planets" → "Gustav Holst").
+
+The LM’s hidden states are combined with projected embeddings via:
+
+\[\mathbf{h}_{\text{fused}} = \sigma\left(\mathbf{W}_g \left[\mathbf{h}_{\text{LM}}; \mathbf{h}_{\text{emb}}\right]\right) \odot \mathbf{h}_{\text{LM}} + \left(1 - \sigma\left(\mathbf{W}_g \left[\mathbf{h}_{\text{LM}}; \mathbf{h}_{\text{emb}}\right]\right)\right) \odot \mathbf{h}_{\text{emb}}\]
+
+where $\mathbf{W}_g$ is a learned gate matrix.
+\subsection{Testing Process}
 
 %------------------------------------------------
 
 \section{Results}
 
-\begin{table} % Single column table
+\begin{table}[h] % Single column table
 	\centering
 	\begin{tabular}{l c c}
 		\toprule
-		Model & Training Time (s) & Loss (Epoch 5) \\
+		Model & Accuracy & Length Match Accuracy \\
 		\midrule
-		pythia-14m & 444.85 & 0.8150 \\
-		pythia-31m & 635.19 & 0.6695 \\
-		pythia-70m & 1,101.80 & 0.5146 \\
-		pythia-160m & 2,594.33 & 0.3911 \\
-		pythia-410m & 7,197.65 & 0.2740 \\
-		pythia-1.3b & 41,539.82 & 0.2445 \\
+		pythia-14m & 0.0000 & 0.0320 \\
+		pythia-31m & 0.0000 & 0.2580 \\
+		pythia-70m & 0.0000 & 0.1210 \\
+		pythia-160m & 0.0030 & 0.2150 \\
+		pythia-410m & 0.0230 & 0.2400 \\
+		pythia-1.3b & 0.0270 & 0.1970 \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:pythiarun1}
@@ -150,66 +219,10 @@ Mauris interdum porttitor fringilla. Proin tincidunt sodales leo at ornare. Done
 
 Referencing a table using its label: Table \ref{tab:pythiarun1}.
 
-\begin{table*} % Full width table (notice the starred environment)
-	\caption{Example two column table with fixed-width columns.}
-	\centering % Horizontally center the table
-	\begin{tabular}{L{0.2\linewidth} L{0.2\linewidth} R{0.15\linewidth}} % Manually specify column alignments with L{}, R{} or C{} and widths as a fixed amount, usually as a proportion of \linewidth
-		\toprule
-		\multicolumn{2}{c}{Location} \\
-		\cmidrule(r){1-2}
-		East Distance & West Distance & Count \\
-		\midrule
-		100km & 200km & 422 \\
-		350km & 1000km & 1833 \\
-		600km & 1200km & 890 \\
-		\bottomrule
-	\end{tabular}
-\end{table*}
-
-Aenean feugiat pellentesque venenatis. Sed faucibus tristique tortor vel ultrices. Donec consequat tellus sapien. Nam bibendum urna mauris, eget sagittis justo gravida vel. Mauris nisi lacus, malesuada sit amet neque ut, venenatis tempor orci. Curabitur feugiat sagittis molestie. Duis euismod arcu vitae quam scelerisque facilisis. Praesent volutpat eleifend tortor, in malesuada dui egestas id. Donec finibus ac risus sed pellentesque. Donec malesuada non magna nec feugiat. Mauris eget nibh nec orci congue porttitor vitae eu erat. Sed commodo ipsum ipsum, in elementum neque gravida euismod. Cras mi lacus, pulvinar ut sapien ut, rutrum sagittis dui. Donec non est a metus varius finibus. Pellentesque rutrum pellentesque ligula, vitae accumsan nulla hendrerit ut.
-
-
-
-
-Aenean porttitor eros non pharetra congue. Proin in odio in dolor luctus auctor ac et mi. Etiam euismod mi sed lectus fringilla pretium. Phasellus tristique maximus lectus et sodales. Mauris feugiat ligula quis semper luctus. Nam sit amet felis sed leo fermentum aliquet. Mauris arcu dui, posuere id sem eget, cursus pulvinar mi. Donec nec lacus non lectus fermentum scelerisque et at nibh. Sed tristique, metus ac vestibulum porta, tortor lectus placerat lorem, et convallis tellus dolor eget ante. Pellentesque dui ligula, hendrerit a purus et, volutpat tempor lectus. Mauris nec purus nec mauris rhoncus pellentesque. Quisque quis diam sed est lacinia congue. Donec magna est, hendrerit sed metus vel, accumsan rutrum nibh.
-
-
-
-Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Etiam cursus lectus purus, tempus iaculis quam dictum tristique. Nam interdum sapien nec tempor mattis. Quisque id sapien nisi. Mauris vehicula ornare eros vel efficitur. Nulla consectetur, turpis quis fringilla tincidunt, mi neque iaculis lectus, vel commodo elit odio non ex. Duis facilisis, purus ac viverra iaculis, turpis lectus ultrices ante, ac vestibulum ligula magna in libero. Etiam tristique maximus lacinia. Vestibulum hendrerit, lacus malesuada laoreet blandit, sapien velit sollicitudin nunc, eu porttitor urna ligula at lorem. Aliquam faucibus eros in fermentum venenatis. Fusce consectetur congue pellentesque. Suspendisse at nisi sit amet est porttitor cursus. Cras placerat faucibus nunc, a laoreet justo dignissim sit amet.
-
-\subsection{International Support}
-
-\noindent àáâäãåèéêëìíîïòóôöõøùúûüÿýñçčšž
-
-\noindent ÀÁÂÄÃÅÈÉÊËÌÍÎÏÒÓÔÖÕØÙÚÛÜŸÝÑ
-
-\noindent ßÇŒÆČŠŽ
-
-\subsection{Links}
-
-This is a clickable URL link: \href{https://www.latextemplates.com}{LaTeX Templates}. This is a clickable email link: \href{mailto:vel@latextemplates.com}{vel@latextemplates.com}. This is a clickable monospaced URL link: \url{https://www.LaTeXTemplates.com}.
-
 %------------------------------------------------
 
-\section{Discussion}
+\section{Conclusion}
 
-This statement requires citation \autocite{Smith:2023qr}. This statement requires multiple citations \autocite{Smith:2023qr, Smith:2024jd}. This statement contains an in-text citation, for directly referring to a citation like so: \textcite{Smith:2024jd}.
-
-\subsection{Subsection One}
-
-Suspendisse potenti. Vivamus suscipit dapibus metus. Proin auctor iaculis ex, id fermentum lectus dapibus tristique. Nullam maximus eros eget leo pretium dapibus. Nunc in auctor erat, id interdum risus. Suspendisse aliquet vehicula accumsan. In vestibulum efficitur dictum. Sed ultrices, libero nec fringilla feugiat, elit massa auctor ligula, vehicula tempor ligula felis in lectus. Suspendisse sem dui, pharetra ut sodales eu, suscipit sit amet felis. Donec pretium viverra ante, ac pulvinar eros. Suspendisse gravida consectetur urna. Pellentesque vitae leo porta, imperdiet eros eget, posuere sem. Praesent eget leo efficitur odio bibendum condimentum sit amet vel ex. Nunc maximus quam orci, quis pulvinar nibh eleifend ac. Quisque consequat lacus magna, eu posuere tellus iaculis ac. Sed vitae tortor tincidunt ante sagittis iaculis.
-
-\subsection{Subsection Two}
-
-Nullam mollis tellus lorem, sed congue ipsum euismod a. Donec pulvinar neque sed ligula ornare sodales. Nulla sagittis vel lectus nec laoreet. Nulla volutpat malesuada turpis at ultricies. Ut luctus velit odio, sagittis volutpat erat aliquet vel. Donec ac neque eget neque volutpat mollis. Vestibulum viverra ligula et sapien bibendum, vel vulputate ex euismod. Curabitur nec velit velit. Aliquam vulputate lorem elit, id tempus nisl finibus sit amet. Curabitur ex turpis, consequat at lectus id, imperdiet molestie augue. Curabitur eu eros molestie purus commodo hendrerit. Quisque auctor ipsum nec mauris malesuada, non fringilla nibh viverra. Quisque gravida, metus quis semper pulvinar, dolor nisl suscipit leo, vestibulum volutpat ante justo ultrices diam. Sed id facilisis turpis, et aliquet eros.
-
-\subsubsection{Subsubsection Example}
-
-Duis venenatis eget lectus a aliquet. Integer vulputate ante suscipit felis feugiat rutrum. Aliquam eget dolor eu augue elementum ornare. Nulla fringilla interdum volutpat. Sed tincidunt, neque quis imperdiet hendrerit, turpis sapien ornare justo, ac blandit felis sem quis diam. Proin luctus urna sit amet felis tincidunt, sed congue nunc pellentesque. Ut faucibus a magna faucibus finibus. Etiam id mi euismod, auctor nisi eget, pretium metus. Proin tincidunt interdum mi non interdum. Donec semper luctus dolor at elementum. Aenean eu congue tortor, sed hendrerit magna. Quisque a dolor ante. Mauris semper id urna id gravida. Vestibulum mi tortor, finibus eu felis in, vehicula aliquam mi.
-
-Aliquam arcu turpis, ultrices sed luctus ac, vehicula id metus. Morbi eu feugiat velit, et tempus augue. Proin ac mattis tortor. Donec tincidunt, ante rhoncus luctus semper, arcu lorem lobortis justo, nec convallis ante quam quis lectus. Aenean tincidunt sodales massa, et hendrerit tellus mattis ac. Sed non pretium nibh. 
-
-Donec cursus maximus luctus. Vivamus lobortis eros et massa porta porttitor. Nam vitae suscipit mi. Pellentesque ex tellus, iaculis vel libero at, cursus pretium sapien. Curabitur accumsan velit sit amet nulla lobortis, ut pretium ex aliquam. Proin eget volutpat orci. Morbi eu aliquet turpis. Vivamus molestie urna quis tempor tristique. Proin hendrerit sem nec tempor sollicitudin.
 
 %----------------------------------------------------------------------------------------
 %	 REFERENCES
