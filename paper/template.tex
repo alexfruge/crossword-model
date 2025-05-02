@@ -193,7 +193,31 @@ The LM’s hidden states are combined with projected embeddings via:
 \[\mathbf{h}_{\text{fused}} = \sigma\left(\mathbf{W}_g \left[\mathbf{h}_{\text{LM}}; \mathbf{h}_{\text{emb}}\right]\right) \odot \mathbf{h}_{\text{LM}} + \left(1 - \sigma\left(\mathbf{W}_g \left[\mathbf{h}_{\text{LM}}; \mathbf{h}_{\text{emb}}\right]\right)\right) \odot \mathbf{h}_{\text{emb}}\]
 
 where $\mathbf{W}_g$ is a learned gate matrix.
+
+\subsubsection{Prompt Engineering Strategies}
+
+The final problem I considered was how clues can require different reasoning modes (definition, wordplay, trivia). I explored using different formatted prompts to guide the LM’s behavior. In the end, I came up with three different prompt formats which each have a different target (detailed in Table \ref{tab:prompt_strategies}).
+
+\begin{table*}[h]
+	\centering
+	\caption{Prompt Engineering Strategies for Crossword Solving}
+	\label{tab:prompt_strategies}
+	\begin{tabular}{lp{8cm}l}
+		\hline
+		\textbf{Strategy} & \textbf{Example Prompt Structure} & \textbf{Use Case} \\
+		\hline
+		\textbf{Basic} & \texttt{"Clue: [CLUE] ([LENGTH]). Answer:"} & Simple, definitional clues \\
+		\hline
+		\textbf{Detailed} & \texttt{"Task: Solve this clue. Clue: `[CLUE]'. Answer must be [LENGTH] letters, no spaces. Answer:"} & Complex clues \\
+		\hline
+		\textbf{Chain-of-Thought} & \texttt{"Analyze the clue `[CLUE]'. Consider: 1) Definitions 2) Wordplay. Then give a [LENGTH]-letter answer:"} & Wordplay/metaphorical clues \\
+		\hline
+	\end{tabular}
+\end{table*}
+
 \subsection{Testing Process}
+
+The evaluation framework rigorously assesses model performance across multiple dimensions, combining automated metrics with human analysis to ensure comprehensive validation of crossword-solving capabilities.
 
 %------------------------------------------------
 
