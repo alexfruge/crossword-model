@@ -28,10 +28,12 @@
 	twoside, % Two side traditional mode where headers and footers change between odd and even pages, comment this option to make them fixed
 ]{LTJournalArticle}
 
-\addbibresource{sample.bib} % BibLaTeX bibliography file
 
+\usepackage{biblatex}
 \usepackage{amsmath}  % For \mathbf, \text, and math operators
 \usepackage{amssymb}  % For \odot
+
+\addbibresource{sample.bib} % BibLaTeX bibliography file
 
 \runninghead{CrosswordLLM} % A shortened article title to appear in the running head, leave this command empty for no running head
 
@@ -55,7 +57,7 @@
 % Full-width abstract
 \renewcommand{\maketitlehookd}{%
 	\begin{abstract}
-		\noindent I'll fill this out later once I get some results, and finalize any fine-tuning steps I plan on making (embeddings, prompt engineering, etc).
+		\noindent This paper introduces CrosswordLLM, a benchmark framework designed to evaluate the performance of Large Language Models (LLMs) in solving crossword puzzles, a task requiring complex linguistic reasoning. Using the New York Times Crossword Clues dataset, the study systematically tests models from the Pythia suite (ranging from 14M to 1.3B parameters) to analyze the impact of model size, architectural enhancements, and prompting strategies such as Chain-of-Thought (CoT) and contextual embeddings. Results reveal that while larger models exhibit modest improvements in accuracy and length matching, overall performance remains low, highlighting the challenges LLMs face in tasks demanding structured outputs and nuanced reasoning. The findings underscore the limitations of current LLMs in crossword solving and suggest directions for future work, including targeted training and integration of advanced reasoning techniques.
 	\end{abstract}
 }
 
@@ -83,27 +85,27 @@ understanding and generation. However, their ability to solve complex linguistic
 The sources within the Foundational Work section mainly go discuss how LLMs scale better with more compute, which was one of the attributes I wanted to verify in my crossword case.
 
 \begin{itemize}
-	\item Brown et al. (2020) introduced GPT-3, demonstrating that large-scale LLMs can perform a variety of tasks with minimal examples, a technique known as few-shot learning. This work established the potential of LLMs to generalize across tasks without extensive fine-tuning.
-	\item Chowdhery et al. (2022) presented PaLM, a 540-billion-parameter model trained using the Pathways system. PaLM achieved state-of-the-art results on numerous benchmarks, highlighting the benefits of scaling model size and training data for improved performance.
+	\item Brown et al. (2020) \cite{brown2020language} introduced GPT-3, demonstrating that large-scale LLMs can perform a variety of tasks with minimal examples, a technique known as few-shot learning. This work established the potential of LLMs to generalize across tasks without extensive fine-tuning.
+	\item Chowdhery et al. (2022) \cite{chowdhery2022palm} presented PaLM, a 540-billion-parameter model trained using the Pathways system. PaLM achieved state-of-the-art results on numerous benchmarks, highlighting the benefits of scaling model size and training data for improved performance.
 \end{itemize}
 \subsection{Enhancing Few-Shot Learning and Prompting Techniques}
 
 This section highlights methods for improving language model performance with limited data through better prompt design and reasoning strategies. 
 
 \begin{itemize}
-	\item Gao et al. (2020) proposed LM-BFF, a method combining prompt-based fine-tuning with automated prompt generation to improve few-shot learning in smaller models. This approach is particularly relevant for scenarios with limited annotated data, such as specialized crossword clues.
-	\item Wei et al. (2022) introduced Chain-of-Thought (CoT) prompting, where models generate intermediate reasoning steps before arriving at an answer. CoT prompting significantly improved performance on complex reasoning tasks, suggesting its applicability to the nuanced reasoning required in crossword solving. I ended up using Chain of Thought prompting as one of my enhancements to the existing models.
-	\item Zhou et al. (2023) developed Automatic Prompt Engineer (APE), a system that automatically generates and selects effective prompts. APE outperformed human-crafted prompts on various tasks, indicating the potential for automated prompt optimization in crossword applications.
+	\item Gao et al. (2020) \cite{gao2020making} proposed LM-BFF, a method combining prompt-based fine-tuning with automated prompt generation to improve few-shot learning in smaller models. This approach is particularly relevant for scenarios with limited annotated data, such as specialized crossword clues.
+	\item Wei et al. (2022) \cite{wei2022chain} introduced Chain-of-Thought (CoT) prompting, where models generate intermediate reasoning steps before arriving at an answer. CoT prompting significantly improved performance on complex reasoning tasks, suggesting its applicability to the nuanced reasoning required in crossword solving. I ended up using Chain of Thought prompting as one of my enhancements to the existing models.
+	\item Zhou et al. (2023) \cite{zhou2023large} developed Automatic Prompt Engineer (APE), a system that automatically generates and selects effective prompts. APE outperformed human-crafted prompts on various tasks, indicating the potential for automated prompt optimization in crossword applications.
 \end{itemize}
 
 
 \subsection{Previous Applications to Crossword Solving}
 
-\noindent Saha et al. (2024) demonstrated that current LLMs exhibit significant competence in solving cryptic crossword clues, outperforming previous state-of-the-art results by a factor of 2–3. They developed a search algorithm enabling LLMs to solve full crossword grids, achieving 93\% accuracy on New York Times puzzles. This work underscores the feasibility of applying LLMs to complex language tasks like crosswords
+\noindent Saha et al. (2024) \cite{saha2024crossword} demonstrated that current LLMs exhibit significant competence in solving cryptic crossword clues, outperforming previous state-of-the-art results by a factor of 2–3. They developed a search algorithm enabling LLMs to solve full crossword grids, achieving 93\% accuracy on New York Times puzzles. This work underscores the feasibility of applying LLMs to complex language tasks like crosswords
 
 \subsection{Emerging Techniques and Considerations}
 
-\noindent Pattern-Aware Chain-of-Thought Prompting (Zhang et al., 2024) emphasizes the importance of diverse reasoning patterns in prompts to enhance model generalization and robustness. This approach could further improve LLM performance on varied crossword clue types.
+\noindent Pattern-Aware Chain-of-Thought Prompting (Zhang et al., 2024) \cite{zhang2024pattern} emphasizes the importance of diverse reasoning patterns in prompts to enhance model generalization and robustness. This approach could further improve LLM performance on varied crossword clue types.
 
 \subsection{Future Direction}
 
@@ -111,8 +113,7 @@ Integrating these advancements suggests a multifaceted approach to developing an
 \begin{itemize}
 	\item Model Selection: Utilize large-scale models like PaLM for their superior reasoning capabilities.
 	
-	\item Few-Shot Learning: Implement LM-BFF techniques to fine-tune models with limited crossword-specific data.
-	
+	\item Few-Shot Learning: Implement LM-BFF techniques to fine-tune models with limited crossword-specific data.	
 	
 	\item Reasoning Enhancement: Apply CoT and pattern-aware prompting to improve the model's ability to handle complex clues.
 \end{itemize}
@@ -129,30 +130,16 @@ By building upon these foundational and contemporary works, the proposed suite a
 
 \subsection{Data Sourcing \& Explanation}
 
-The data for this project was pulled from Darin Hawley's New York Times Crossword Clues \& Answers 1993-2021 dataset. (Hawley, 2021) This dataset contains 781,573 entries, each of which come with the date the puzzle containing the clue was published, the clue itself, and the answer. 
+The data for this project was pulled from Darin Hawley's New York Times Crossword Clues \& Answers 1993-2021 dataset. (Hawley, 2021) \cite{Hawley2021} This dataset contains 781,573 entries, each of which come with the date the puzzle containing the clue was published, the clue itself, and the answer. 
 
 The NYT dataset is being used as our training data, as it contains a good spread of clue variety, including some pop-culture related clues, some wordplay, and a wide variety of difficulty in the clues themselves. It also contains a good number of clues involving multiple words in a clue being concatenated into one continuous word (see Table \ref{tab:NYTClues} for some examples of this). I'll also use the NYT dataset for a testing suite that tests the selected models on more conventional clues.
 
-\begin{table}[h] % Single column table
-	\centering
-	\begin{tabular}{c c}
-		\toprule
-		Answer & Clue \\
-		\midrule
-		EATAT & Irritate\\
-		ALQAEDA & War on terror target\\
-		ASGOODASGOLD & 100\% reliable\\
-		\bottomrule
-	\end{tabular}
-	\caption{Example clues from NYT Crossword Clues.}
-	\label{tab:NYTClues}
-\end{table}
 
 \subsection{Libraries and Tools Used}
 
 The core libraries used within this package are \textbf{PyTorch 2.0} (training original models), \textbf{TransformerLens} (loading original models), \textbf{HuggingFace Transformers} (loading tokenizers), as well as \textbf{Pandas} and \textbf{Scikit-learn}.
 
-\noindent The system leverages the \textbf{Pythia} suite of autoregressive language models (Biderman et al., 2023) as its primary base architecture due to their transparency, reproducibility, and controlled scaling properties. Pythia models provide a standardized framework for experimentation, with versions ranging from 70M to 12B parameters, allowing systematic comparisons across model sizes. For the sake of the models being usable on my computer, the largest model I tested with contained 1.3 billion parameters.
+\noindent The system leverages the \textbf{Pythia} suite of autoregressive language models (Biderman et al., 2023) \cite{biderman2023pythia} as its primary base architecture due to their transparency, reproducibility, and controlled scaling properties. Pythia models provide a standardized framework for experimentation, with versions ranging from 70M to 12B parameters, allowing systematic comparisons across model sizes. For the sake of the models being usable on my computer, the largest model I tested with contained 1.3 billion parameters.
 
 \subsection{Training Process}
 
@@ -190,7 +177,96 @@ where $\mathbf{W}_g$ is a learned gate matrix.
 
 The final problem I considered was how clues can require different reasoning modes (definition, wordplay, trivia). I explored using different formatted prompts to guide the LM’s behavior. In the end, I came up with three different prompt formats which each have a different target (detailed in Table \ref{tab:prompt_strategies}).
 
-\begin{table*}[h]
+
+
+\subsection{Testing Process}
+
+The evaluation framework rigorously assesses model performance across multiple dimensions, combining automated metrics with human analysis to ensure comprehensive validation of crossword-solving capabilities.
+
+%------------------------------------------------
+
+\section{Results}
+
+\subsection{Base Models}
+
+The first test I ran was running all of the models I selected (pythia-14m through pythia-1.3b) with no enhancements, with the goal of verifying that models increase performance as their size increases.
+
+The results in table \ref{tab:pythiarun1} provide insight into how the performance of models in the Pythia suite scales with size when solving a task based on crossword clues from the New York Times dataset. Here's a summary and interpretation of the findings:
+
+As shown by the results, there is a clear trend showing that both Accuracy and Length Match Accuracy generally improve as model size increases. For example, EMA starts at 0.0000 for the smallest models (pythia-14m, 31m, and 70m), and then slowly begins to increase, reaching a max at 0.0270 for pythia-1.3b. LMA follows a similar upward trend, with the pythia-31m surprisingly achieving the highest score here (0.2580), though results fluctuate slightly across models. My guess for this is that the model is getting lucky with the correct length once the model is large enough, since the LMAs hover around 0.2 once pythia-31m and larger are tested.
+
+This suggests that model scale correlates positively with performance, though the relationship is not strictly linear. Small models struggle significantly, likely due to a lack of capacity to represent the complex relationships required to solve crossword clues—a task that typically relies on semantic associations, cultural knowledge, and language nuance.
+
+The fact that EMA remains low even for the larger models (only 2.7\% for pythia-1.3b) indicates that this is a very difficult task, likely involving not just language understanding but also lateral thinking, wordplay, and perhaps common-sense reasoning. The low scores suggest that these models may not yet be well-equipped for this form of symbolic reasoning or require more targeted training.
+
+The Length Match Accuracy is a more forgiving metric, it simply measures whether the model's output matches the length of the correct answer. This improves more noticeably with model size, showing that larger models are better at mimicking superficial features of the answer even if they can't yet solve the clue. The pythia-31m’s unusually high score on this metric may be an outlier or a quirk of training dynamics.
+
+\subsection{Contextual Embeddings}
+
+My first enhancement I tested was adding the contextual embeddings to all of the previous models aside from pythia-1.3b.
+
+All models (pythia-14m to pythia-410m) achieve 0.0000 EMA, meaning they fail to produce correct answers despite embedding enhancements (see Table \ref{tab:embeddingtest}). This matches the zero-accuracy trend observed in earlier tests (with and without CoT), reinforcing the task’s difficulty.
+
+There are some interesting behaviors from this model when you look at some of the outputted answers (Table \ref{tab:embeddingtestexamples}). It outputs placeholder strings ("ANS", "ANSWER") for clues where the length matches (e.g., "Get hitched to (3)" → "ANS" [3 letters]). This explains its non-zero LMA. This likely means that the model struggles with wordplay (e.g., "Hookups for a camera?" → "SEXTAPES" is correct, but the output "ANSWER" suggests it defaulted to a generic response).
+
+
+\subsection{Chain of Thought Testing}
+
+The final test I tried was using Chain of Thought prompts on some of the smaller models.
+
+The performance shown in Table \ref{tab:prompttest}, which tests models with Chain of Thought (CoT) Prompt enhancement, contrasts with the initial test results. All models (pythia-14m, 31m, 70m, 160m) achieve 0.0000 Accuracy, indicating they fail to produce correct answers even with CoT prompts. This is worse than the initial test, where larger models (e.g., pythia-1.3b) achieved modest accuracy (0.0270).
+
+Chain of Thought prompting does not improve performance for these smaller Pythia models on the NYT crossword task. The zero Accuracy and depressed LMA scores indicate that CoT may overcomplicate the task for models with limited parameters, disrupting even superficial metrics like length matching. This aligns with the initial finding that larger models perform better, but suggests CoT is ineffective without sufficient scale. Further investigation could explore whether CoT benefits emerge with larger models (e.g., pythia-1.3b) or alternative prompt designs.
+
+
+%------------------------------------------------
+
+\section{Conclusion}
+
+Overall, the results of this experiment suggest that while increasing model size generally improves performance on crossword clue-solving tasks, the overall accuracy remains low—even for the largest models tested—highlighting the difficulty of the task and the limitations of current LLMs in this domain. In addition, both attempts to enhance the pythia models with embedding strategies and chain of thought prompting did not yield meaningful improvements; as shown in Tables \ref{tab:embeddingtestexamples} and \ref{tab:prompttest}, the generated answers were often either incorrect, generic (e.g., “ANSWER”), or completely absent. This suggests that embedding enhancements or chain of thought prompting alone are insufficient to address the deeper reasoning and cultural knowledge needed for crossword solving. What worked moderately well was the model's ability to match answer lengths more closely as size increased, indicating some understanding of structural patterns. However, what didn’t work was the models' ability to generate semantically and contextually accurate responses, even with enhancements. This reveals a gap between pattern recognition and true language understanding, suggesting future work should explore more targeted training, domain adaptation, or multi-step reasoning architectures to bridge that divide.
+
+For future work on this project, I'd love to be able to train on GPUs in order to use larger models, as I think one of the bottlenecks that any LLM will run into during training is model size. This would also allow me to use newer, better models that perform better with less parameters. Another nice extension I would like to make is the integration of other LLM API's such as OpenAI's, in order to test cutting edge models on the crossword clue dataset. The way that the codebase is currently set up would make this a reasonable addition, needing minimal changes.
+
+I think the most important thing to take away from this project is that LLMs may struggle with tasks whose results need to be highly structured, given the way that their output is generated. It's hard to LLMs to check if the tokens they're generating are the proper "length" in order to answer a crossword clue, and this is a problem that can extend to other, less trivial tasks.
+
+
+%----------------------------------------------------------------------------------------
+%	 REFERENCES
+%----------------------------------------------------------------------------------------
+
+
+%----------------------------------------------------------------------------------------
+
+\section{References \& AI Use}
+
+\printbibliography[]
+
+https://claude.ai/share/33fa78db-2dc8-4fef-a80b-baa16c511aba
+
+This Claude conversation gave me inspiration for a few enhancements, as well as some starter code for those enhancements.
+
+I also used GPT 4o for help with writing this paper, and explaining some of the harder concepts (gate matrices mainly).
+
+\newpage
+
+\section{Appendix}
+
+\begin{table*}[h] % NYTClues
+	\centering	
+	\caption{Example clues from NYT Crossword Clues.}
+	\begin{tabular}{c c}
+		\toprule
+		Answer & Clue \\
+		\midrule
+		EATAT & Irritate\\
+		ALQAEDA & War on terror target\\
+		ASGOODASGOLD & 100\% reliable\\
+		\bottomrule
+	\end{tabular}
+	\label{tab:NYTClues}
+\end{table*}
+
+\begin{table*}[h] % prompt_strategies
 	\centering
 	\caption{Prompt Engineering Strategies for Crossword Solving}
 	\label{tab:prompt_strategies}
@@ -207,11 +283,7 @@ The final problem I considered was how clues can require different reasoning mod
 	\end{tabular}
 \end{table*}
 
-\subsection{Testing Process}
-
-The evaluation framework rigorously assesses model performance across multiple dimensions, combining automated metrics with human analysis to ensure comprehensive validation of crossword-solving capabilities.
-
-\begin{table}[t]
+\begin{table*}[h] % evaluation_metrics
 	\centering
 	\caption{Comprehensive Evaluation Metrics for Crossword-Solving Models}
 	\label{tab:evaluation_metrics}
@@ -224,22 +296,14 @@ The evaluation framework rigorously assesses model performance across multiple d
 		\textbf{Length-Adjusted Accuracy (LAA)} & 
 		\% of answers with correct length & 
 		Meets crossword grid limits \\
-		
+		\bottomrule
 	\end{tabular}
-	\vspace{0.2cm}
 	\footnotesize \textit{Note.} All metrics computed on held-out test set with $n=1000$ samples. Embedding similarity uses \texttt{all-MiniLM-L6-v2}.
-\end{table}
+\end{table*}
 
-%------------------------------------------------
-
-\section{Results}
-
-The first test I ran was running all of the models I selected (pythia-14m through pythia-1.3b) with no enhancements, with the goal of verifying that models increase performance as their size increases.
-
-The results in table \ref{tab:pythiarun1} provide insight into how the performance of models in the Pythia suite scales with size when solving a task based on crossword clues from the New York Times dataset. Here's a summary and interpretation of the findings:
-
-\begin{table}[h] % Single column table
+\begin{table*}[h] % pythiarun1
 	\centering
+	\caption{First run across Pythia Suite using NYT Data (n=12,800, batch size=32, epochs=5)}
 	\begin{tabular}{l c c}
 		\toprule
 		Model & EMA & LMA \\
@@ -253,20 +317,11 @@ The results in table \ref{tab:pythiarun1} provide insight into how the performan
 		\bottomrule
 	\end{tabular}
 	\label{tab:pythiarun1}
-	\caption{First run across Pythia Suite using NYT Data (n=12,800, batch size=32, epochs=5)}
-\end{table}
+\end{table*}
 
-As shown by the results, there is a clear trend showing that both Accuracy and Length Match Accuracy generally improve as model size increases. For example, EMA starts at 0.0000 for the smallest models (pythia-14m, 31m, and 70m), and then slowly begins to increase, reaching a max at 0.0270 for pythia-1.3b. LMA follows a similar upward trend, with the pythia-31m surprisingly achieving the highest score here (0.2580), though results fluctuate slightly across models. My guess for this is that the model is getting lucky with the correct length once the model is large enough, since the LMAs hover around 0.2 once pythia-31m and larger are tested.
-
-This suggests that model scale correlates positively with performance, though the relationship is not strictly linear. Small models struggle significantly, likely due to a lack of capacity to represent the complex relationships required to solve crossword clues—a task that typically relies on semantic associations, cultural knowledge, and language nuance.
-
-The fact that EMA remains low even for the larger models (only 2.7\% for pythia-1.3b) indicates that this is a very difficult task, likely involving not just language understanding but also lateral thinking, wordplay, and perhaps common-sense reasoning. The low scores suggest that these models may not yet be well-equipped for this form of symbolic reasoning or require more targeted training.
-
-The Length Match Accuracy is a more forgiving metric, it simply measures whether the model's output matches the length of the correct answer. This improves more noticeably with model size, showing that larger models are better at mimicking superficial features of the answer even if they can't yet solve the clue. The pythia-31m’s unusually high score on this metric may be an outlier or a quirk of training dynamics.
-
-
-\begin{table}[h] % Single column table
+\begin{table*}[h] % embeddingtest
 	\centering
+	\caption{Testing models with Embedding enhancement using NYT Data (n=12,800, batch size=32, epochs=5)}
 	\begin{tabular}{l c c}
 		\toprule
 		Model & Accuracy & Length Match Accuracy \\
@@ -279,52 +334,40 @@ The Length Match Accuracy is a more forgiving metric, it simply measures whether
 		\bottomrule
 	\end{tabular}
 	\label{tab:embeddingtest}
-	\caption{Testing models with Embedding enhancement using NYT Data (n=12,800, batch size=32, epochs=5)}
-\end{table}
+\end{table*}
 
-\begin{table*}[h] % Single column table
+\begin{table*}[h] %embeddingtestexamples
 	\centering
+	\caption{Example outputs from pythia-70m with Embedding enhancement using NYT Data (n=12,800, batch size=32, epochs=5)}
 	\begin{tabular}{l c c}
 		\toprule
-		Clue & Generated Answer & Actual \\
+		Clue & Actual & Generated Answer \\
 		\midrule
-		Carrie in "Sex and the City" (8) & \textit{no answer} & BRADSHAW \\
+		Carrie in "Sex and the City" (8) & BRADSHAW & \textit{no answer} \\
 		Get hitched to (3)& WED & ANS \\
 		Attempt to block (6) & OPPOSE & ANSWER \\
 		Hookups for a camera? (8) & SEXTAPES & ANSWER \\
 		\bottomrule
 	\end{tabular}
 	\label{tab:embeddingtestexamples}
-	\caption{Example outputs from pythia-70m with Embedding enhancement using NYT Data (n=12,800, batch size=32, epochs=5)}
+\end{table*}
+
+\begin{table*}[h] % prompttest
+	\centering
+	\caption{Testing models with Chain of Thought Prompt enhancement using NYT Data (n=12,800, batch size=32, epochs=2)}
+	\begin{tabular}{l c c}
+		\toprule
+		Model & Accuracy & Length Match Accuracy \\
+		\midrule
+		pythia-14m & 0.0000 & 0.1410 \\
+		pythia-31m & 0.0000 & 0.0920 \\
+		pythia-70m & 0.0000 & 0.1040 \\
+		pythia-160m & 0.0000 & 0.2150 \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:prompttest}
 \end{table*}
 
 
-67. Clue: Get hitched to (3)
-Correct Answer:   WED
-Generated Answer: ANS
-
-68. Clue: Attempt to block (6)
-Correct Answer:   OPPOSE
-Generated Answer: ANSWER
-
-69. Clue: Hookups for a camera? (8)
-Correct Answer:   SEXTAPES
-Generated Answer: ANSWER
-
-%------------------------------------------------
-
-\section{Conclusion}
-
-
-%----------------------------------------------------------------------------------------
-%	 REFERENCES
-%----------------------------------------------------------------------------------------
-
-
-%----------------------------------------------------------------------------------------
-
-\section{References \& AI Use}
-
-https://claude.ai/share/33fa78db-2dc8-4fef-a80b-baa16c511aba
 
 \end{document}
