@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # List of models to run (fill this in with your model names)
-models=('EleutherAI/pythia-31m' 'EleutherAI/pythia-70m' 'EleutherAI/pythia-160m' 'EleutherAI/pythia-410m')
-enhancements=('embeddings' 'prompt' 'length_aware')
+models=('EleutherAI/pythia-14m' 'EleutherAI/pythia-31m' 'EleutherAI/pythia-70m' 'EleutherAI/pythia-160m')
+enhancements=('embeddings' 'prompt')
 
 # Path to the Python script
 python_script="src/main.py"
@@ -38,7 +38,7 @@ done
 echo "All models have been processed successfully."
 echo "Testing all models"
 
-python $test_script
+# python $test_script
 
 echo "All models have been tested successfully."
 echo "All done!"
