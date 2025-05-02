@@ -15,13 +15,14 @@ class CrosswordDataset(Dataset):
         answers (list): List of corresponding answers.
         tokenizer (transformers.PreTrainedTokenizer): Tokenizer for encoding the samples.
         max_length (int): Maximum length for tokenization and padding.
+        enhancement (str): Type of enhancement applied to the model (e.g., "embeddings", "length_aware").
     """
-    def __init__(self, clues, answers, ans_lengths, tokenizer, model_name, max_length=50):
-        log_statement(model_name, "[Dataset] Initializing crossword dataset...")
+    def __init__(self, clues, answers, ans_lengths, tokenizer, model_name, max_length=50, enhancement=None):
+        log_statement(model_name, "[Dataset] Initializing crossword dataset...", enhancement)
         self.samples = [f"Task: Solve the crossword clue:\nCrossword clue: {clue} ({ans_length})\nAnswer: {answer}" for clue, answer, ans_length in zip(clues, answers, ans_lengths)]
         self.tokenizer = tokenizer
         self.max_length = max_length
-        log_statement(model_name, f"[Dataset] Created {len(self.samples)} samples.")
+        log_statement(model_name, f"[Dataset] Created {len(self.samples)} samples.", enhancement)
 
     def __len__(self):
         return len(self.samples)
@@ -39,7 +40,7 @@ class CrosswordDataset(Dataset):
         labels = input_ids.clone()
         return input_ids, attention_mask, labels
 
-def load_data(file="data/ho.csv", max_elements = 1_000_000, model_name=None):
+def load_data(file="data/ho.csv", max_elements = 1_000_000, model_name=None, enhancement=None):
     """
     Load the crossword dataset from a CSV file.
 
@@ -47,25 +48,26 @@ def load_data(file="data/ho.csv", max_elements = 1_000_000, model_name=None):
         file (str): Path to the CSV file containing the crossword data.
         max_elements (int): Maximum number of elements to load from the dataset.
         model_name (str): Name of the model for logging purposes.
+        enhancement (str): Type of enhancement applied to the model (e.g., "embeddings", "length_aware") for logging.
     Returns:
         pd.DataFrame: DataFrame containing the crossword clues and answers.
     Raises:
         FileNotFoundError: If the specified file does not exist.
     """
-    log_statement(model_name, "[Data] Loading crossword dataset from CSV...")
+    log_statement(model_name, "[Data] Loading crossword dataset from CSV...", enhancement)
     try:
         df = pd.read_csv(file, encoding="utf-8", on_bad_lines="skip")
     except FileNotFoundError:
         raise FileNotFoundError(f"[Error] File {file} not found.")
     except UnicodeDecodeError:
-        log_statement(model_name, "[Error] UnicodeDecodeError: Trying with ISO-8859-1 encoding...")
+        log_statement(model_name, "[Error] UnicodeDecodeError: Trying with ISO-8859-1 encoding...", enhancement)
         df = pd.read_csv(file, encoding="ISO-8859-1", on_bad_lines="skip")
     
     df = df[["clue", "answer"]].dropna()
-    log_statement(model_name, f"[Data] Loaded {len(df)} rows.")
+    log_statement(model_name, f"[Data] Loaded {len(df)} rows.", enhancement)
     
     if len(df) > max_elements:
-        log_statement(model_name, f"[Data] Truncating dataset to {max_elements} rows.")
+        log_statement(model_name, f"[Data] Truncating dataset to {max_elements} rows.", enhancement)
         df = df.head(max_elements)
     
     df = add_answer_lengths(df, model_name=model_name)
@@ -74,7 +76,7 @@ def load_data(file="data/ho.csv", max_elements = 1_000_000, model_name=None):
 
     return df
 
-def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.8, max_elements = 10_000, model_name=None):
+def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_file="data/test.csv", test_size=0.8, max_elements = 10_000, model_name=None, enhancement=None):
     """
     Split the dataset into training and testing datasets and save them to CSV files.
 
@@ -85,20 +87,21 @@ def split_and_save_data(file="data/ho.csv", train_file="data/train.csv", test_fi
         test_size (float): Proportion of the dataset to include in the test split.
         max_elements (int): Maximum number of elements to load from the dataset.
         model_name (str): Name of the model for logging purposes.
+        enhancement (str): Type of enhancement applied to the model (e.g., "embeddings", "length_aware") for logging.
     """
-    log_statement(model_name, "[Data] Splitting dataset into training and testing sets...")
+    log_statement(model_name, "[Data] Splitting dataset into training and testing sets...", enhancement)
     df = load_data(file, max_elements=max_elements, model_name=model_name)
     train_df, test_df = train_test_split(df, test_size=test_size, random_state=42)
 
-    log_statement(model_name, f"[Data] Saving training dataset to {train_file}...")
+    log_statement(model_name, f"[Data] Saving training dataset to {train_file}...", enhancement)
     train_df.to_csv(train_file, index=False)
-    log_statement(model_name, f"[Data] Saving testing dataset to {test_file}...")
+    log_statement(model_name, f"[Data] Saving testing dataset to {test_file}...", enhancement)
     test_df.to_csv(test_file, index=False)
-    log_statement(model_name, "[Data] Dataset split and saved successfully.")
+    log_statement(model_name, "[Data] Dataset split and saved successfully.", enhancement)
 
 
 
-def add_answer_lengths(df, model_name=None):
+def add_answer_lengths(df, model_name=None, enhancement=None):
     """
     Add a column 'ans_length' to the dataframe containing the length of each answer.
     The length is dash-delimited for multi-word answers.
@@ -106,12 +109,13 @@ def add_answer_lengths(df, model_name=None):
     Args:
         df (pd.DataFrame): DataFrame containing a column 'answer'.
         model_name (str): Name of the model for logging purposes.
+        enhancement (str): Type of enhancement applied to the model (e.g., "embeddings", "length_aware") for logging.
     Returns:
         pd.DataFrame: DataFrame with the new 'ans_length' column.
     """
 
     if 'ans_length' not in df.columns:
-        log_statement(model_name, "[Data] Adding 'ans_length' column to the dataframe...")
+        log_statement(model_name, "[Data] Adding 'ans_length' column to the dataframe...", enhancement)
         df["ans_length"] = pd.Series(dtype="string")
 
     # Remove answer length information from clues

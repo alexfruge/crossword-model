@@ -4,7 +4,7 @@ from datetime import datetime
 # Dictionary to store the initial log time for each model
 _MODEL_START_TIMES = {}
 
-def log_statement(model_name: str, statement: str):
+def log_statement(model_name: str, statement: str, enhancement: str = None):
     # Get or create the initial log time for this model
     if model_name not in _MODEL_START_TIMES:
         _MODEL_START_TIMES[model_name] = datetime.now()
@@ -19,7 +19,10 @@ def log_statement(model_name: str, statement: str):
     # Prepare log components
     model_basename = os.path.basename(model_name)
     log_dir = "logs"
-    log_filename = f"{model_basename}_{filename_time}.log"
+    if enhancement:
+        log_filename = f"{model_basename}-{enhancement}_{filename_time}.log"
+    else:
+        log_filename = f"{model_basename}_{filename_time}.log"
     log_path = os.path.join(log_dir, log_filename)
     log_entry = f"[{entry_time}] {statement}\n"
     

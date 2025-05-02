@@ -87,7 +87,7 @@ def generate_answers_from_csv_enhanced(
 ) -> None:
     """Enhanced version of generate_answers_from_csv that supports enhancements."""
     
-    log_statement(model_name, f"[Batch] Loading {n} clues from {csv_path}...")
+    log_statement(model_name, f"[Batch] Loading {n} clues from {csv_path}...", enhancement)
     df = pd.read_csv(csv_path)
     clues = df['clue'].tolist()[:n]
     correct_answers = df['answer'].tolist()[:n]
@@ -100,9 +100,9 @@ def generate_answers_from_csv_enhanced(
             enhancement=enhancement,
             device=device
         )
-        log_statement(model_name, f"{i}. Clue: {clue} ({expected_len})")
-        log_statement(model_name, f"Correct Answer:   {correct}")
-        log_statement(model_name, f"Generated Answer: {generated}\n")
+        log_statement(model_name, f"{i}. Clue: {clue} ({expected_len})", enhancement)
+        log_statement(model_name, f"Correct Answer:   {correct}", enhancement)
+        log_statement(model_name, f"Generated Answer: {generated}\n", enhancement)
 
 
 def main_enhanced(model_name: str = "gpt2-medium", enhancement: str = None):
@@ -114,7 +114,7 @@ def main_enhanced(model_name: str = "gpt2-medium", enhancement: str = None):
         enhancement: Type of enhancement to apply ("embeddings", "prompt", "knowledge", 
                     "adversarial", "length_aware", None)
     """
-    log_statement(model_name, f"[Main] Starting crossword fine-tuning with {enhancement if enhancement else 'no'} enhancement...")
+    log_statement(model_name, f"[Main] Starting crossword fine-tuning with {enhancement if enhancement else 'no'} enhancement...", enhancement)
 
     # Load data
     split_and_save_data(
@@ -127,24 +127,24 @@ def main_enhanced(model_name: str = "gpt2-medium", enhancement: str = None):
     )
     
     # Load tokenizer
-    log_statement(model_name, "[Main] Loading tokenizer...")
+    log_statement(model_name, "[Main] Loading tokenizer...", enhancement)
     if "gpt2" in model_name.lower():
         tokenizer = GPT2Tokenizer.from_pretrained(model_name.split("/")[-1])
     else:
         tokenizer = AutoTokenizer.from_pretrained(model_name)
     tokenizer.pad_token = tokenizer.eos_token
-    log_statement(model_name, "[Main] Tokenizer loaded.")
+    log_statement(model_name, "[Main] Tokenizer loaded.", enhancement)
 
     # Create the appropriate model based on enhancement
     if enhancement == "embeddings":
         model = create_embedding_model(model_name)
-        log_statement(model_name, "[Main] Created embedding-enhanced model.")
+        log_statement(model_name, "[Main] Created embedding-enhanced model.", enhancement)
     elif enhancement == "length_aware":
         model = create_length_aware_model(model_name)
-        log_statement(model_name, "[Main] Created length-aware model.")
+        log_statement(model_name, "[Main] Created length-aware model.", enhancement)
     else:
         model = load_model(model_name)
-        log_statement(model_name, "[Main] Loaded standard model.")
+        log_statement(model_name, "[Main] Loaded standard model.", enhancement)
 
     # Prepare dataset and dataloader based on enhancement
     if enhancement == "prompt":
@@ -155,7 +155,7 @@ def main_enhanced(model_name: str = "gpt2-medium", enhancement: str = None):
             batch_size=32,
             prompt_strategy="detailed"
         )
-        log_statement(model_name, "[Main] Created dataloader with enhanced prompts.")
+        log_statement(model_name, "[Main] Created dataloader with enhanced prompts.", enhancement)
     else:
         # Standard dataset creation
         train_df = pd.read_csv("data/train.csv")
@@ -166,16 +166,16 @@ def main_enhanced(model_name: str = "gpt2-medium", enhancement: str = None):
         from data_management.dataset_creation import CrosswordDataset
         dataset = CrosswordDataset(clues, answers, ans_lengths, tokenizer, model_name)
         dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
-        log_statement(model_name, "[Main] Created standard dataloader.")
+        log_statement(model_name, "[Main] Created standard dataloader.", enhancement)
 
     # Start training
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    log_statement(model_name, f"[Main] Using device: {device}")
+    log_statement(model_name, f"[Main] Using device: {device}", enhancement)
 
     from model.train import train
     loss = train(model, model_name, dataloader, device, num_epochs=5)
 
-    log_statement(model_name, "[Main] Training complete.")
+    log_statement(model_name, "[Main] Training complete.", enhancement)
 
     # Save model
     enhancement_tag = f"-{enhancement}" if enhancement else ""
@@ -183,9 +183,9 @@ def main_enhanced(model_name: str = "gpt2-medium", enhancement: str = None):
         save_path = f"trained_models/enhanced/model-{model_name.split('/')[-1]}{enhancement_tag}.pt"
     else:
         save_path = f"trained_models/raw/model-{model_name.split('/')[-1]}{enhancement_tag}.pt"
-    log_statement(model_name, f"[Main] Saving model weights to {save_path}...")
+    log_statement(model_name, f"[Main] Saving model weights to {save_path}...", enhancement)
     torch.save(model.state_dict(), save_path)
-    log_statement(model_name, "[Main] Model weights saved successfully.")
+    log_statement(model_name, "[Main] Model weights saved successfully.", enhancement)
 
     # Generate answers with the trained model
     generate_answers_from_csv_enhanced(
