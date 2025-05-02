@@ -6,6 +6,8 @@ paper/*.synctex.gz
 paper/*.bcf
 paper/*.run.xml
 paper/sample.bib
+paper/*.bbl
+paper/*.blg
 
 **/__pycache__/
 
