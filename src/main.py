@@ -179,7 +179,10 @@ def main_enhanced(model_name: str = "gpt2-medium", enhancement: str = None):
 
     # Save model
     enhancement_tag = f"-{enhancement}" if enhancement else ""
-    save_path = f"trained_models/model-{model_name.split('/')[-1]}{enhancement_tag}.pt"
+    if enhancement:
+        save_path = f"trained_models/enhanced/model-{model_name.split('/')[-1]}{enhancement_tag}.pt"
+    else:
+        save_path = f"trained_models/raw/model-{model_name.split('/')[-1]}{enhancement_tag}.pt"
     log_statement(model_name, f"[Main] Saving model weights to {save_path}...")
     torch.save(model.state_dict(), save_path)
     log_statement(model_name, "[Main] Model weights saved successfully.")
