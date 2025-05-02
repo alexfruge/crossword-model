@@ -8,10 +8,11 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from model import load
 from utils import log_statement
-from main import generate_answer
+from main import generate_answer_enhanced
 
 # Paths
-models_dir = "trained_models"
+raw_models_dir = "trained_models/raw"
+enhanced_models_dir = "trained_models/enhanced"
 test_data_path = "data/test.csv"
 
 # Load test data
@@ -60,7 +61,7 @@ def evaluate_model(model, inputs, model_name):
     predictions = []
     for idx, input_text in enumerate(inputs):
         with torch.no_grad():
-            prediction = generate_answer(model, tokenizer, input_text)
+            prediction = generate_answer_enhanced(model, tokenizer, input_text)
             predictions.append(prediction)
             if (idx + 1) % 100 == 0:
                 log_statement(statement=f"[Predictions] Processed {idx + 1}/{len(inputs)} predictions.", model_name=model_name)
@@ -123,13 +124,13 @@ def test_models():
     """
 
     inputs, true_outputs, lengths = load_test_data(test_data_path)
-    model_files = [f for f in os.listdir(models_dir) if f.endswith('.pt')]
+    model_files = [f for f in os.listdir(raw_models_dir) if f.endswith('.pt')]
 
     for model_file in model_files:
         model_name = model_file.replace("model-", "").replace(".pt", "").replace("trained_models/", "")
         if "pythia" in model_name:
             model_name = f"EleutherAI/{model_name}"
-        model_path = os.path.join(models_dir, model_file)
+        model_path = os.path.join(raw_models_dir, model_file)
         model = load.load_finetuned_model(model_name=model_name, weights_path=model_path)
 
         predictions = evaluate_model(model, inputs, model_name)

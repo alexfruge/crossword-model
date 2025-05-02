@@ -52,8 +52,6 @@ def generate_answer_enhanced(
             output = model.generate(
                 input_ids,
                 max_new_tokens=20,
-                num_beams=3,
-                early_stopping=True
             )
         else:
             # Manual token generation if generate method not available
