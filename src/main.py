@@ -163,7 +163,7 @@ def main_enhanced(model_name: str = "gpt2-medium", enhancement: str = None):
     log_statement(model_name, f"[Main] Using device: {device}", enhancement)
 
     from model.train import train
-    loss = train(model, model_name, dataloader, device, num_epochs=5)
+    loss = train(model, model_name, dataloader, device, num_epochs=2)
 
     log_statement(model_name, "[Main] Training complete.", enhancement)
 

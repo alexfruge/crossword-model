@@ -11,7 +11,7 @@ class EnhancedCrosswordDataset(Dataset):
     
     def __init__(self, clues: List[str], answers: List[str], 
                  ans_lengths: List[int], tokenizer: PreTrainedTokenizer, 
-                 model_name: str, prompt_strategy: str = "detailed"):
+                 model_name: str, prompt_strategy: str = "cot"):
         """
         Initialize the dataset with clues, answers, and lengths.
         

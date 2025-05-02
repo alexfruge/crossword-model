@@ -24,7 +24,7 @@ def load_test_data(file_path, max_elements=1_000):
     Load test data from a CSV file and return specific columns.
     Args:
         file_path (str): The path to the CSV file containing the test data.
-        max_elements (int, optional): The maximum number of rows to load from the file. Defaults to 10,000.
+        max_elements (int, optional): The maximum number of rows to load from the file. Defaults to 1,000.
     Returns:
         tuple: A tuple containing three pandas Series:
             - clue (pd.Series): The 'clue' column from the CSV file.
