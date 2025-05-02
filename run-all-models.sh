@@ -2,7 +2,9 @@
 
 # List of models to run (fill this in with your model names)
 models=('EleutherAI/pythia-14m' 'EleutherAI/pythia-31m' 'EleutherAI/pythia-70m' 'EleutherAI/pythia-160m')
-enhancements=('embeddings' 'prompt')
+# List of enhancements to apply (currently prompt and embeddings are supported)
+# enhancements=('none' 'prompt' 'embeddings')
+enhancements=('prompt')
 
 # Path to the Python script
 python_script="src/main.py"
