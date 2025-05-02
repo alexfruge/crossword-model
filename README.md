@@ -12,5 +12,13 @@ This project aims to develop a comprehensive test suite for evaluating the capab
 - Integrate with popular LLM APIs for automated testing.
 - Visualize results and performance metrics.
 
-## Getting Started
-Stay tuned for setup instructions and usage examples as the project evolves.
+## Usage
+I recommend familiarizing yourself with the package by running some initial base models to learn the CLI.
+
+If you want to train just one model with one enhancement, use the following format:
+
+```python src/main.py --model [MODEL_NAME] --enhancement [ENHANCEMENT]```
+
+Any model which has a tokenizer in HuggingFace and weights in TransformerLens is compatible with this tool.
+
+If you want to run a suite of models and enhancements one after another, I created a script ```run_all_models.sh``` which can be edited to include whichever models desired, as well as enhancements.
