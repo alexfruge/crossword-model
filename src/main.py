@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from transformers import GPT2Tokenizer, AutoTokenizer
 
 from data_management.dataset_creation import split_and_save_data
-from model.load import load_model, load_finetuned_model
+from model.load import load_model
 from utils import log_statement
 
 # Import the enhancement modules
