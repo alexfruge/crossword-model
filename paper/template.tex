@@ -172,15 +172,6 @@ The training loop itself uses  the AdamW optimizer with a learning rate of $5E-0
 
 The base autoregressive language model is augmented with several task-specific enhancements designed to improve its crossword-solving capabilities. These modifications target key challenges in clue-answer generation, including length conditioning, semantic grounding, and controlled decoding.
 
-\subsubsection{Length-Aware Modeling}
-One current problem with standard LLMs is that they struggle to generate answers of exact lengths (e.g., 5 letters for "Capital of France").
-
-One solution to this problem is to add explicit length conditioning via \textbf{length embeddings} and \textbf{positional bias}.
-
-Length embeddings are learned embedding layers which map target lengths (integers) to vectors, which are then added to the LM’s hidden states before the output layer, which are then used to select length-specific output heads (one per possible length).
-
-Positional bias is another position embedding which encourages the model to stop early when the target length is reached (via EOS token bias), and to avoid over-generation (suppression of non-alphabetic tokens beyond the target length).
-
 \subsubsection{Contextual Embedding Fusion}
 LMs may lack deep semantic understanding of clues (e.g., parsing wordplay like "Composer of 'The Planets' (5)" → "HOLST").
 
@@ -190,7 +181,8 @@ The frozen sentence embedder is derived from a pretrained model (e.g., all-MiniL
 
 The LM’s hidden states are combined with projected embeddings via:
 
-\[\mathbf{h}_{\text{fused}} = \sigma\left(\mathbf{W}_g \left[\mathbf{h}_{\text{LM}}; \mathbf{h}_{\text{emb}}\right]\right) \odot \mathbf{h}_{\text{LM}} + \left(1 - \sigma\left(\mathbf{W}_g \left[\mathbf{h}_{\text{LM}}; \mathbf{h}_{\text{emb}}\right]\right)\right) \odot \mathbf{h}_{\text{emb}}\]
+\[\mathbf{h}_{\text{fused}} = \sigma\left(\mathbf{W}_g \left[\mathbf{h}_{\text{LM}}; \mathbf{h}_{\text{emb}}\right]\right) \odot \mathbf{h}_{\text{LM}} +\]
+\[ \left(1 - \sigma\left(\mathbf{W}_g \left[\mathbf{h}_{\text{LM}}; \mathbf{h}_{\text{emb}}\right]\right)\right) \odot \mathbf{h}_{\text{emb}}\]
 
 where $\mathbf{W}_g$ is a learned gate matrix.
 
@@ -202,7 +194,7 @@ The final problem I considered was how clues can require different reasoning mod
 	\centering
 	\caption{Prompt Engineering Strategies for Crossword Solving}
 	\label{tab:prompt_strategies}
-	\begin{tabular}{lp{8cm}l}
+	\begin{tabular}{lp{8cm}l}	
 		\hline
 		\textbf{Strategy} & \textbf{Example Prompt Structure} & \textbf{Use Case} \\
 		\hline
@@ -219,15 +211,38 @@ The final problem I considered was how clues can require different reasoning mod
 
 The evaluation framework rigorously assesses model performance across multiple dimensions, combining automated metrics with human analysis to ensure comprehensive validation of crossword-solving capabilities.
 
+\begin{table}[t]
+	\centering
+	\caption{Comprehensive Evaluation Metrics for Crossword-Solving Models}
+	\label{tab:evaluation_metrics}
+	\begin{tabular}{l l l}
+		\toprule
+		\textbf{Metric Category} & \textbf{Description} & \textbf{Interpretation} \\
+		\midrule
+		\textbf{Exact Match Accuracy (EMA)} & \% of answers which are correct & 
+		Higher is better \\
+		\textbf{Length-Adjusted Accuracy (LAA)} & 
+		\% of answers with correct length & 
+		Meets crossword grid limits \\
+		
+	\end{tabular}
+	\vspace{0.2cm}
+	\footnotesize \textit{Note.} All metrics computed on held-out test set with $n=1000$ samples. Embedding similarity uses \texttt{all-MiniLM-L6-v2}.
+\end{table}
+
 %------------------------------------------------
 
 \section{Results}
+
+The first test I ran was running all of the models I selected (pythia-14m through pythia-1.3b) with no enhancements, with the goal of verifying that models increase performance as their size increases.
+
+The results in table \ref{tab:pythiarun1} provide insight into how the performance of models in the Pythia suite scales with size when solving a task based on crossword clues from the New York Times dataset. Here's a summary and interpretation of the findings:
 
 \begin{table}[h] % Single column table
 	\centering
 	\begin{tabular}{l c c}
 		\toprule
-		Model & Accuracy & Length Match Accuracy \\
+		Model & EMA & LMA \\
 		\midrule
 		pythia-14m & 0.0000 & 0.0320 \\
 		pythia-31m & 0.0000 & 0.2580 \\
@@ -241,7 +256,60 @@ The evaluation framework rigorously assesses model performance across multiple d
 	\caption{First run across Pythia Suite using NYT Data (n=12,800, batch size=32, epochs=5)}
 \end{table}
 
-Referencing a table using its label: Table \ref{tab:pythiarun1}.
+As shown by the results, there is a clear trend showing that both Accuracy and Length Match Accuracy generally improve as model size increases. For example, EMA starts at 0.0000 for the smallest models (pythia-14m, 31m, and 70m), and then slowly begins to increase, reaching a max at 0.0270 for pythia-1.3b. LMA follows a similar upward trend, with the pythia-31m surprisingly achieving the highest score here (0.2580), though results fluctuate slightly across models. My guess for this is that the model is getting lucky with the correct length once the model is large enough, since the LMAs hover around 0.2 once pythia-31m and larger are tested.
+
+This suggests that model scale correlates positively with performance, though the relationship is not strictly linear. Small models struggle significantly, likely due to a lack of capacity to represent the complex relationships required to solve crossword clues—a task that typically relies on semantic associations, cultural knowledge, and language nuance.
+
+The fact that EMA remains low even for the larger models (only 2.7\% for pythia-1.3b) indicates that this is a very difficult task, likely involving not just language understanding but also lateral thinking, wordplay, and perhaps common-sense reasoning. The low scores suggest that these models may not yet be well-equipped for this form of symbolic reasoning or require more targeted training.
+
+The Length Match Accuracy is a more forgiving metric, it simply measures whether the model's output matches the length of the correct answer. This improves more noticeably with model size, showing that larger models are better at mimicking superficial features of the answer even if they can't yet solve the clue. The pythia-31m’s unusually high score on this metric may be an outlier or a quirk of training dynamics.
+
+
+\begin{table}[h] % Single column table
+	\centering
+	\begin{tabular}{l c c}
+		\toprule
+		Model & Accuracy & Length Match Accuracy \\
+		\midrule
+		pythia-14m & 0.0000 & 0.0000 \\
+		pythia-31m & 0.0000 & 0.0000 \\
+		pythia-70m & 0.0000 & 0.1210 \\
+		pythia-160m & 0.0000 & 0.2150 \\
+		pythia-410m & 0.0000 & 0.0090\\
+		\bottomrule
+	\end{tabular}
+	\label{tab:embeddingtest}
+	\caption{Testing models with Embedding enhancement using NYT Data (n=12,800, batch size=32, epochs=5)}
+\end{table}
+
+\begin{table*}[h] % Single column table
+	\centering
+	\begin{tabular}{l c c}
+		\toprule
+		Clue & Generated Answer & Actual \\
+		\midrule
+		Carrie in "Sex and the City" (8) & \textit{no answer} & BRADSHAW \\
+		Get hitched to (3)& WED & ANS \\
+		Attempt to block (6) & OPPOSE & ANSWER \\
+		Hookups for a camera? (8) & SEXTAPES & ANSWER \\
+		\bottomrule
+	\end{tabular}
+	\label{tab:embeddingtestexamples}
+	\caption{Example outputs from pythia-70m with Embedding enhancement using NYT Data (n=12,800, batch size=32, epochs=5)}
+\end{table*}
+
+
+67. Clue: Get hitched to (3)
+Correct Answer:   WED
+Generated Answer: ANS
+
+68. Clue: Attempt to block (6)
+Correct Answer:   OPPOSE
+Generated Answer: ANSWER
+
+69. Clue: Hookups for a camera? (8)
+Correct Answer:   SEXTAPES
+Generated Answer: ANSWER
 
 %------------------------------------------------
 
@@ -252,8 +320,11 @@ Referencing a table using its label: Table \ref{tab:pythiarun1}.
 %	 REFERENCES
 %----------------------------------------------------------------------------------------
 
-\printbibliography % Output the bibliography
 
 %----------------------------------------------------------------------------------------
+
+\section{References \& AI Use}
+
+https://claude.ai/share/33fa78db-2dc8-4fef-a80b-baa16c511aba
 
 \end{document}
