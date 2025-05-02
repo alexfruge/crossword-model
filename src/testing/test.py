@@ -11,7 +11,6 @@ from model import load
 from utils import log_statement
 from main import generate_answer_enhanced
 from enhancements.contextual_embeddings import create_enhanced_model
-from enhancements.length_aware_model import create_length_aware_model
 from enhancements.prompt_engineering import create_enhanced_dataloader
 
 # Paths
@@ -126,10 +125,6 @@ def test_models():
             model_path = os.path.join(enhanced_models_dir, model_file)
             enhancement = "embeddings"
             model = create_enhanced_model(model_name.replace("-embeddings", ""))
-        elif "length_aware" in model_name:
-            model_path = os.path.join(enhanced_models_dir, model_file)
-            enhancement = "length_aware"
-            model = create_length_aware_model(model_name.replace("-length_aware", ""))
         elif "prompt" in model_name:
             model_path = os.path.join(enhanced_models_dir, model_file)
             enhancement = "prompt"

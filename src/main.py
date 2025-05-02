@@ -11,7 +11,6 @@ from utils import log_statement
 # Import the enhancement modules
 from enhancements.contextual_embeddings import create_enhanced_model as create_embedding_model
 from enhancements.prompt_engineering import create_enhanced_dataloader
-from enhancements.length_aware_model import create_length_aware_model, Constrained_Beam_Generator
 
 
 def generate_answer_enhanced(
@@ -33,13 +32,7 @@ def generate_answer_enhanced(
             return model.generate_answer(tokenizer, clue, expected_length, device)
     
     elif enhancement == "length_aware":
-        # Length-aware model has its own generation method
-        if hasattr(model, 'generate_answer'):
-            return model.generate_answer(tokenizer, clue, expected_length, device)
-        
-        # Alternatively, use the constrained beam generator
-        generator = Constrained_Beam_Generator(model, tokenizer, device)
-        return generator.generate(clue, expected_length)
+        pass
         
     # Default generation method for other enhancements
     prompt = f"Task: Solve the crossword clue:\nCrossword clue: {clue} ({expected_length})\nAnswer:"
@@ -139,9 +132,6 @@ def main_enhanced(model_name: str = "gpt2-medium", enhancement: str = None):
     if enhancement == "embeddings":
         model = create_embedding_model(model_name)
         log_statement(model_name, "[Main] Created embedding-enhanced model.", enhancement)
-    elif enhancement == "length_aware":
-        model = create_length_aware_model(model_name)
-        log_statement(model_name, "[Main] Created length-aware model.", enhancement)
     else:
         model = load_model(model_name)
         log_statement(model_name, "[Main] Loaded standard model.", enhancement)
